@@ -1,0 +1,18 @@
+* Time for low memwrite and high memwrite transition is needed
+
+
+
+* Don't need such a longlarge display for the device
+
+
+
+* Moved from: BombJack\TODO.txt
+	* TODO: Will need a replacement for the Proteus data generators because they have a 1024 byte limit
+		Something better like the display part will do.
+			Will need substantial outputs, and something to make it easier to output the address, with auto increment and _MEWR signals
+			EBS 8 bits, address 16 bits (in effect 24 bits address, might as well make it 32 bits) data 8 bits, plus _MEWR signal
+			Include binary chunks from data files, like the ROM dumps, no more editing hex values for binary image data
+
+
+
+* Read a digital data definition file, emit digital data
