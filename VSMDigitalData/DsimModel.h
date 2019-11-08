@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include <stdio.h>
 #include "vsm.hpp"
+#include "ActiveModel.h"
 
 #define InfoLog(__s__) inst->log(__s__);
 
@@ -21,9 +22,15 @@ private:
 	IINSTANCE *mInstance;
 	IDSIMCKT *mDigitalComponent;
 	IDSIMPIN *mPinD[32];
+	IDSIMPIN *mPinID[8];
 	IDSIMPIN *mPinMEMWRITE , *mPinCLOCK;
 
-	FILE *mDebugOutFP;
+	FILE *mPatternFP;
 
-	IACTIVEMODEL *mActiveModel;
+	ActiveModel *mActiveModel;
+
+	unsigned int mPreviousData;
+
+	bool mDoStart;
+	bool mFirstTime;
 };

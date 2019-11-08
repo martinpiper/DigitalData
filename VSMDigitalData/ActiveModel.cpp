@@ -10,8 +10,16 @@ VOID ActiveModel::initialize(ICOMPONENT *cpt)
 		return;
 	}
 
-	CHAR *filename = mComponent->getprop((CHAR*)"PATTERN");
-	mData.init(filename);
+	CHAR *t = mComponent->getprop((CHAR*)"PATTERN");
+	mFilename = t;
+
+	t = mComponent->getprop((CHAR*)"TOLOW");
+	mToLow = atof(t);
+	t = mComponent->getprop((CHAR*)"TOHI");
+	mToHigh = atof(t);
+
+	t = mComponent->getprop((CHAR*)"RECORD");
+	mRecord = atoi(t)?true:false;
 }
 
 ISPICEMODEL *ActiveModel::getspicemodel (CHAR *primitive)

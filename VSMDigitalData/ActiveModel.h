@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "vsm.hpp"
 #include "Data.h"
+#include <string>
 
 class ActiveModel : public IACTIVEMODEL
 {
@@ -21,6 +22,10 @@ public:
 	{
 		return mData;
 	}
+
+	std::string mFilename;
+	double mToLow, mToHigh;
+	bool mRecord;
 
 private:
 	ICOMPONENT *mComponent;
