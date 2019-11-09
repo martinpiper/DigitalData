@@ -1,1 +1,9 @@
 * Don't forget the build needs to be x86 not x64 :D
+
+
+
+* Time for low memwrite and high memwrite transition is needed
+
+
+
+* Don't need such a longlarge display for the device
