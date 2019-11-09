@@ -1,7 +1,8 @@
 #pragma once
 #include "StdAfx.h"
-#include "vsm.hpp"
 #include <vector>
+#include <fstream>
+#include <string>
 
 #pragma warning(disable : 4251)
 
@@ -13,13 +14,15 @@ public:
 
 	void init(const CHAR *filename);
 
-	void simulate(const ABSTIME time, const bool clockEdge);
+	void simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge);
 
-	const int getData()
+	const unsigned int getData()
 	{
 		return mData;
 	}
 
 private:
 	unsigned int mData;
+	std::ifstream mFile;
+	std::string mCurrentLine;
 };

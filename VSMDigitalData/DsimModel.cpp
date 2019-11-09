@@ -45,7 +45,7 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		}
 		else
 		{
-			mPatternFP = fopen(mActiveModel->mFilename.c_str(), "r");
+			mActiveModel->getData().init(mActiveModel->mFilename.c_str());
 		}
 	}
 }
@@ -59,10 +59,16 @@ VOID DsimModel::runctrl (RUNMODES mode)
 		mFirstTime = true;
 		break;
 	case RM_SUSPEND:
-		fflush(mPatternFP);
+		if (0 != mPatternFP)
+		{
+			fflush(mPatternFP);
+		}
 		break;
 	case RM_STOP:
-		fclose(mPatternFP);
+		if (0 != mPatternFP)
+		{
+			fclose(mPatternFP);
+		}
 		mPatternFP = 0;
 		break;
 	}
@@ -102,28 +108,58 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 				mFirstTime = false;
 				mPreviousData = value;
-				fprintf(mPatternFP, "time:%f\n", rtime);
-				fprintf(mPatternFP, "data:$%08x\n", value);
+				fprintf(mPatternFP, "@time:%f\t", rtime);
+				fprintf(mPatternFP, "$%08x\n", value);
 			}
 		}
 		else
 		{
+			int i;
+			unsigned int value = 0;
+			unsigned int valuePosEdge = 0;
+			unsigned int valueNegEdge = 0;
+			for (i = 7; i >= 0; i--)
+			{
+				if (ishigh(mPinID[i]->istate()))
+				{
+					value |= 1;
+				}
+				value <<= 1;
+
+				if (mPinID[i]->isposedge())
+				{
+					valuePosEdge |= 1;
+				}
+				valuePosEdge <<= 1;
+
+				if (mPinID[i]->isnegedge())
+				{
+					valueNegEdge |= 1;
+				}
+				valueNegEdge <<= 1;
+			}
+
 			unsigned int dataoutput = 0;
 
 			Data& data = mActiveModel->getData();
-			data.simulate(time, clockEdge);
+			data.simulate(realtime(time), value , valuePosEdge , valueNegEdge);
 			dataoutput = data.getData();
 
-			int i;
 			for (i = 0; i < 32; i++)
 			{
 				if (dataoutput & (1 << i))
 				{
-					mPinD[i]->setstate(time, 1, SHI);
+					if (!ishigh(mPinD[i]->istate()))
+					{
+						mPinD[i]->setstate(time, 1, SHI);
+					}
 				}
 				else
 				{
-					mPinD[i]->setstate(time, 1, SLO);
+					if (!islow(mPinD[i]->istate()))
+					{
+						mPinD[i]->setstate(time, 1, SLO);
+					}
 				}
 			}
 
