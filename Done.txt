@@ -14,6 +14,9 @@
 	Done: Output the next 0-31 bit range
 	d$00000000
 
+	Done: Set the next 0-31 bit range, but not output
+	s$00000000
+
 	Done: Output the specified bit range from a file, for the whole file
 	<0,1,2,3,4,5,6,7,<..\foo\bar.bin
 
@@ -25,3 +28,16 @@
 
 	Done: Output the specified bit range from a file, from the start for number of bytes. Data in the file must be aligned to 8 bits, a byte.
 	<0,1,2,3,4,5,6,7,>$123,<..\foo\bar.bin
+
+	Setup bits to be used for next output, but don't output any data
+	<0,1,2,3,4,5,6,7,<
+
+
+
+
+* Need bits counting syntax
+	TODO: Add 1 binary to the bits specified for every clock
+	+8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
+
+
+* Output bits from value, this uses the bits setup by <: b$73

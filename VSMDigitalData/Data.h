@@ -30,4 +30,6 @@ private:
 	std::ifstream mInputData;
 	std::list<int> mInputDataBits;
 	int mInputDataNumBytes;
+
+	std::list<int> mCountingBits;
 };

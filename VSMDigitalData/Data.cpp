@@ -63,6 +63,26 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		return;
 	}
 
+	if (!mCountingBits.empty())
+	{
+		bool carry = true;
+		for (int theBit : mCountingBits)
+		{
+			if (mData & (1 << theBit) && carry)
+			{
+				mData = mData & ~(1 << theBit);
+				continue;
+			}
+
+			if (!(mData & (1 << theBit)) && carry)
+			{
+				mData = mData | (1 << theBit);
+				carry = false;
+				continue;
+			}
+		}
+	}
+
 	bool gotNextOutput = false;
 	while (!gotNextOutput)
 	{
@@ -141,6 +161,15 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			break;
 		}
 
+		// s$00000000
+		if (mCurrentLine.at(0) == 's')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+			std::string tok = getNextTok(mCurrentLine);
+			mData = ParamToUNum(tok.c_str());
+			continue;
+		}
+
 		// <0,1,2,3,4,5,6,7,@$123,>$123,<..\foo\bar.bin
 		if (mCurrentLine.at(0) == '<')
 		{
@@ -148,7 +177,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			unsigned int startPos = 0;
 			mInputDataNumBytes = INT_MAX;
 			mInputDataBits.clear();
-			
+
 			while (mCurrentLine.at(0) != '<')
 			{
 				std::string tok = getNextTok(mCurrentLine);
@@ -176,10 +205,45 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			}
 			mInputData.clear();
 			mCurrentLine = mCurrentLine.substr(1);
-			mInputData.open(mCurrentLine, std::ios_base::in | std::ios_base::binary);
-			mInputData.seekg((size_t)startPos , std::ios::beg);
+			if (mCurrentLine.length() > 1)
+			{
+				mInputData.open(mCurrentLine, std::ios_base::in | std::ios_base::binary);
+				mInputData.seekg((size_t)startPos, std::ios::beg);
+			}
 			mCurrentLine.clear();
 			continue;
+		}
+
+		// +8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
+		if (mCurrentLine.at(0) == '+')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+			mCountingBits.clear();
+
+			while (mCurrentLine.at(0) != '+')
+			{
+				std::string tok = getNextTok(mCurrentLine);
+				mCountingBits.push_back(ParamToUNum(tok.c_str()));
+			}
+			std::string tok = getNextTok(mCurrentLine);
+			continue;
+		}
+
+		// b$73
+		if (mCurrentLine.at(0) == 'b')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+			std::string tok = getNextTok(mCurrentLine);
+			unsigned int theData = ParamToUNum(tok.c_str());
+
+			for (int theBit : mInputDataBits)
+			{
+				mData = mData & ~(1 << theBit);
+				mData = mData | ((theData & 1) << theBit);
+				theData >>= 1;
+			}
+			gotNextOutput = true;
+			break;
 		}
 
 		printf("Unkown comand: %s\n", mCurrentLine.c_str());
