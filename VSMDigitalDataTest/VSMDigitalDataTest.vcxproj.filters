@@ -30,4 +30,7 @@
   <ItemGroup>
     <Text Include="Test1.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="t.bin" />
+  </ItemGroup>
 </Project>

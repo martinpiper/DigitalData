@@ -109,7 +109,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				mFirstTime = false;
 				mPreviousData = value;
 				fprintf(mPatternFP, "@time:%f\t", rtime);
-				fprintf(mPatternFP, "$%08x\n", value);
+				fprintf(mPatternFP, "d$%08x\n", value);
 			}
 		}
 		else

@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <list>
 
 #pragma warning(disable : 4251)
 
@@ -25,4 +26,8 @@ private:
 	unsigned int mData;
 	std::ifstream mFile;
 	std::string mCurrentLine;
+
+	std::ifstream mInputData;
+	std::list<int> mInputDataBits;
+	int mInputDataNumBytes;
 };

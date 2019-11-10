@@ -7,3 +7,21 @@
 
 
 * Don't need such a longlarge display for the device
+
+
+
+* Read a digital data definition file, emit digital data
+	Done: Output the next 0-31 bit range
+	d$00000000
+
+	Done: Output the specified bit range from a file, for the whole file
+	<0,1,2,3,4,5,6,7,<..\foo\bar.bin
+
+	Done: Output the specified bit range from a file, from the start byte offset in the file, for the whole file. Data in the file must be aligned to 8 bits, a byte.
+	<0,1,2,3,4,5,6,7,@$123,<..\foo\bar.bin
+
+	Done: Output the specified bit range from a file, from the start byte offset in the file, for number of bytes. Data in the file must be aligned to 8 bits, a byte.
+	<0,1,2,3,4,5,6,7,@$123,>$123,<..\foo\bar.bin
+
+	Done: Output the specified bit range from a file, from the start for number of bytes. Data in the file must be aligned to 8 bits, a byte.
+	<0,1,2,3,4,5,6,7,>$123,<..\foo\bar.bin
