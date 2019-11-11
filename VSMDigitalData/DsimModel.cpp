@@ -19,6 +19,17 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	mInstance = instance;
 	mDigitalComponent = dsimckt;
 
+	CHAR *t = mInstance->getstrval((CHAR*)"PATTERN");
+	mFilename = t;
+
+	t = mInstance->getstrval((CHAR*)"TOLOW");
+	mToLow = atof(t);
+	t = mInstance->getstrval((CHAR*)"TOHI");
+	mToHigh = atof(t);
+
+	t = mInstance->getstrval((CHAR*)"RECORD");
+	mRecord = atoi(t) ? true : false;
+
 	int i;
 	for (i = 0; i < 32; i++)
 	{
@@ -39,13 +50,13 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	if (mDoStart)
 	{
 		mDoStart = false;
-		if (mActiveModel->mRecord)
+		if (mRecord)
 		{
-			mPatternFP = fopen(mActiveModel->mFilename.c_str(), "w");
+			mPatternFP = fopen(mFilename.c_str(), "w");
 		}
 		else
 		{
-			mActiveModel->getData().init(mActiveModel->mFilename.c_str());
+			mData.init(mFilename.c_str());
 		}
 	}
 }
@@ -89,7 +100,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 	if (clockEdge)
 	{
-		if (mActiveModel->mRecord)
+		if (mRecord)
 		{
 			double rtime = realtime(time);
 
@@ -108,7 +119,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 				mFirstTime = false;
 				mPreviousData = value;
-				fprintf(mPatternFP, "@time:%f\t", rtime);
+//				fprintf(mPatternFP, "@time:%f\n", rtime);
 				fprintf(mPatternFP, "d$%08x\n", value);
 			}
 		}
@@ -141,7 +152,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 			unsigned int dataoutput = 0;
 
-			Data& data = mActiveModel->getData();
+			Data& data = mData;
 			data.simulate(realtime(time), value , valuePosEdge , valueNegEdge);
 			dataoutput = data.getData();
 
@@ -163,8 +174,8 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				}
 			}
 
-			mPinMEMWRITE->setstate(dsimtime(realtime(time) + mActiveModel->mToLow), 1, SLO);
-			mPinMEMWRITE->setstate(dsimtime(realtime(time) + mActiveModel->mToHigh), 1, SHI);
+			mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow), 1, SLO);
+			mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToHigh), 1, SHI);
 		}
 	}
 }

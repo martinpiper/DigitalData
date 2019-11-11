@@ -33,4 +33,10 @@ private:
 
 	bool mDoStart;
 	bool mFirstTime;
+
+	std::string mFilename;
+	double mToLow, mToHigh;
+	bool mRecord;
+
+	Data mData;
 };

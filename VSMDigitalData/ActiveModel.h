@@ -18,16 +18,6 @@ public:
 	void drawText(void);
 	void drawScreen(void);
 
-	Data& getData()
-	{
-		return mData;
-	}
-
-	std::string mFilename;
-	double mToLow, mToHigh;
-	bool mRecord;
-
 private:
 	ICOMPONENT *mComponent;
-	Data mData;
 };
