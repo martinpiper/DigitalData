@@ -4,12 +4,3 @@
 			Will need substantial outputs, and something to make it easier to output the address, with auto increment and _MEWR signals
 			EBS 8 bits, address 16 bits (in effect 24 bits address, might as well make it 32 bits) data 8 bits, plus _MEWR signal
 			Include binary chunks from data files, like the ROM dumps, no more editing hex values for binary image data
-
-
-
-* Need wait for negative edge
-	TODO: Wait for negative edge on any of the specified input bits
-	^0,3,5
-
-
-

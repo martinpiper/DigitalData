@@ -54,10 +54,25 @@ void Data::init(const CHAR *filename)
 {
 	mData = 0;
 	mFile.open(filename);
+
+	mWaitingForPositiveEdge = 0;
+	mWaitingForNegativeEdge = 0;
 }
 
 void Data::simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge)
 {
+	if (mWaitingForPositiveEdge && !(dInputPositiveEdge & mWaitingForPositiveEdge))
+	{
+		return;
+	}
+	mWaitingForPositiveEdge = 0;
+
+	if (mWaitingForNegativeEdge && !(dInputNegativeEdge & mWaitingForNegativeEdge))
+	{
+		return;
+	}
+	mWaitingForNegativeEdge = 0;
+
 	if (mFile.eof())
 	{
 		return;
@@ -241,6 +256,28 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 				mData = mData & ~(1 << theBit);
 				mData = mData | ((theData & 1) << theBit);
 				theData >>= 1;
+			}
+			gotNextOutput = true;
+			break;
+		}
+
+		// ^+$xx
+		// ^-$xx
+		if (mCurrentLine.at(0) == '^')
+		{
+			char edge = mCurrentLine.at(1);
+
+			mCurrentLine = mCurrentLine.substr(2);
+			std::string tok = getNextTok(mCurrentLine);
+			unsigned int theData = ParamToUNum(tok.c_str());
+
+			if (edge == '+')
+			{
+				mWaitingForPositiveEdge = theData;
+			}
+			else
+			{
+				mWaitingForNegativeEdge = theData;
 			}
 			gotNextOutput = true;
 			break;

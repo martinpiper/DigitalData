@@ -32,4 +32,6 @@ private:
 	int mInputDataNumBytes;
 
 	std::list<int> mCountingBits;
+
+	unsigned int mWaitingForPositiveEdge , mWaitingForNegativeEdge;
 };

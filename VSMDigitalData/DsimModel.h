@@ -29,10 +29,7 @@ private:
 
 	ActiveModel *mActiveModel;
 
-	unsigned int mPreviousData;
-
 	bool mDoStart;
-	bool mFirstTime;
 
 	std::string mFilename;
 	double mToLow, mToHigh;

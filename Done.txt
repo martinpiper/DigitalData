@@ -47,3 +47,10 @@
 * If the active sheet, when starting to debug, does not have the part on it then "if (mActiveModel->mRecord)" will fail as mActiveModel is null.
 	CHAR *t = instance->getstrval((CHAR*)"RECORD", 0);
 	Can be used instead of the active model
+
+
+
+* Need wait for negative edge
+	Wait for positive/negative edge on any of the specified input bits
+	^+$01
+	^-$01

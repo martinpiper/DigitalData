@@ -12,7 +12,6 @@ INT DsimModel::isdigital (CHAR *pinname)
 VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 {
 	mPatternFP = 0;
-	mPreviousData = 0;
 
 	mActiveModel = (ActiveModel*) (instance->getactivemodel());
 
@@ -67,7 +66,6 @@ VOID DsimModel::runctrl (RUNMODES mode)
 	{
 	case RM_START:
 		mDoStart = true;
-		mFirstTime = true;
 		break;
 	case RM_SUSPEND:
 		if (0 != mPatternFP)
@@ -96,60 +94,55 @@ BOOL DsimModel::indicate (REALTIME time, ACTIVEDATA *data)
 
 VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 {
+	int i;
+	unsigned int value = 0;
+	unsigned int valuePosEdge = 0;
+	unsigned int valueNegEdge = 0;
+	for (i = 7; i >= 0; i--)
+	{
+		value <<= 1;
+		if (ishigh(mPinID[i]->istate()))
+		{
+			value |= 1;
+		}
+
+		valuePosEdge <<= 1;
+		if (mPinID[i]->isposedge())
+		{
+			valuePosEdge |= 1;
+		}
+
+		valueNegEdge <<= 1;
+		if (mPinID[i]->isnegedge())
+		{
+			valueNegEdge |= 1;
+		}
+	}
+
 	bool clockEdge = (bool) mPinCLOCK->isposedge();
 
-	if (clockEdge)
+	if (clockEdge || valuePosEdge || valueNegEdge)
 	{
 		if (mRecord)
 		{
 			double rtime = realtime(time);
 
 			int i;
-			unsigned int value = 0;
+			value = 0;
 			for (i = 31; i >= 0; i--)
 			{
+				value <<= 1;
 				if (ishigh(mPinD[i]->istate()))
 				{
 					value |= 1;
 				}
-				value <<= 1;
 			}
 
-			if (mFirstTime || (mPreviousData != value))
-			{
-				mFirstTime = false;
-				mPreviousData = value;
-//				fprintf(mPatternFP, "@time:%f\n", rtime);
-				fprintf(mPatternFP, "d$%08x\n", value);
-			}
+//			fprintf(mPatternFP, ";@time:%f\n", rtime);
+			fprintf(mPatternFP, "d$%08x\n", value);
 		}
 		else
 		{
-			int i;
-			unsigned int value = 0;
-			unsigned int valuePosEdge = 0;
-			unsigned int valueNegEdge = 0;
-			for (i = 7; i >= 0; i--)
-			{
-				if (ishigh(mPinID[i]->istate()))
-				{
-					value |= 1;
-				}
-				value <<= 1;
-
-				if (mPinID[i]->isposedge())
-				{
-					valuePosEdge |= 1;
-				}
-				valuePosEdge <<= 1;
-
-				if (mPinID[i]->isnegedge())
-				{
-					valueNegEdge |= 1;
-				}
-				valueNegEdge <<= 1;
-			}
-
 			unsigned int dataoutput = 0;
 
 			Data& data = mData;
@@ -160,14 +153,14 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 				if (dataoutput & (1 << i))
 				{
-					if (!ishigh(mPinD[i]->istate()))
+//					if (!ishigh(mPinD[i]->istate()))
 					{
 						mPinD[i]->setstate(time, 1, SHI);
 					}
 				}
 				else
 				{
-					if (!islow(mPinD[i]->istate()))
+//					if (!islow(mPinD[i]->istate()))
 					{
 						mPinD[i]->setstate(time, 1, SLO);
 					}
