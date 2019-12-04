@@ -35,10 +35,7 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		char temp[8];
 		sprintf(temp, "D%d", i);
 		mPinD[i] = mInstance->getdsimpin(temp, true);
-	}
-	for (i = 0; i < 8; i++)
-	{
-		char temp[8];
+
 		sprintf(temp, "ID%d", i);
 		mPinID[i] = mInstance->getdsimpin(temp, true);
 	}
@@ -98,7 +95,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	unsigned int value = 0;
 	unsigned int valuePosEdge = 0;
 	unsigned int valueNegEdge = 0;
-	for (i = 7; i >= 0; i--)
+	for (i = 31; i >= 0; i--)
 	{
 		value <<= 1;
 		if (ishigh(mPinID[i]->istate()))

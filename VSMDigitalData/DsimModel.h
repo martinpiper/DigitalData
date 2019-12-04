@@ -22,7 +22,7 @@ private:
 	IINSTANCE *mInstance;
 	IDSIMCKT *mDigitalComponent;
 	IDSIMPIN *mPinD[32];
-	IDSIMPIN *mPinID[8];
+	IDSIMPIN *mPinID[32];
 	IDSIMPIN *mPinMEMWRITE , *mPinCLOCK;
 
 	FILE *mPatternFP;
