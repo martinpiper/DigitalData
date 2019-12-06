@@ -1,6 +1,1 @@
 * Include definition files, push the current FP and open a new file, then at the end, pop the older FP
-
-
-
-* The digital data part can be expanded to accept more inputs for RH and RV, no need for _HSYNC with this remapping model
-	Will need a wait for value with bitmask

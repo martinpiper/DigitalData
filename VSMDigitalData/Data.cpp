@@ -57,10 +57,19 @@ void Data::init(const CHAR *filename)
 
 	mWaitingForPositiveEdge = 0;
 	mWaitingForNegativeEdge = 0;
+	mWaitingForMask = 0;
+	mWaitingForData = 0;
 }
 
 void Data::simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge)
 {
+	if (mWaitingForMask && ((dInput & mWaitingForMask) != mWaitingForData))
+	{
+		return;
+	}
+	mWaitingForMask = 0;
+	mWaitingForData = 0;
+
 	if (mWaitingForPositiveEdge && !(dInputPositiveEdge & mWaitingForPositiveEdge))
 	{
 		return;
@@ -279,6 +288,19 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			{
 				mWaitingForNegativeEdge = theData;
 			}
+			gotNextOutput = true;
+			break;
+		}
+
+		// w$ffffffff,$1234
+		if (mCurrentLine.at(0) == 'w')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+			std::string tok = getNextTok(mCurrentLine);
+			mWaitingForMask = ParamToUNum(tok.c_str());
+			tok = getNextTok(mCurrentLine);
+			mWaitingForData = ParamToUNum(tok.c_str()) & mWaitingForMask;
+
 			gotNextOutput = true;
 			break;
 		}

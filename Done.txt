@@ -63,3 +63,8 @@
 			Will need substantial outputs, and something to make it easier to output the address, with auto increment and _MEWR signals
 			EBS 8 bits, address 16 bits (in effect 24 bits address, might as well make it 32 bits) data 8 bits, plus _MEWR signal
 			Include binary chunks from data files, like the ROM dumps, no more editing hex values for binary image data
+
+			
+			
+* The digital data part can be expanded to accept more inputs for RH and RV, no need for _HSYNC with this remapping model
+	Will need a wait for value with bitmask

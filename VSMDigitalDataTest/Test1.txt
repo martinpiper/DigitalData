@@ -33,3 +33,10 @@ d2
 d3
 ^-$01
 d4
+
+
+b0
+; Using <mask> wait for <data>
+w$ffffffff,$1234
+b1
+d0

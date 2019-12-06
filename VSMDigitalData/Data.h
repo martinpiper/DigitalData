@@ -34,4 +34,5 @@ private:
 	std::list<int> mCountingBits;
 
 	unsigned int mWaitingForPositiveEdge , mWaitingForNegativeEdge;
+	unsigned int mWaitingForMask, mWaitingForData;
 };
