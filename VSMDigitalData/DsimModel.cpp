@@ -118,7 +118,8 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 	bool clockEdge = (bool) mPinCLOCK->isposedge();
 
-	if (clockEdge || valuePosEdge || valueNegEdge)
+	Data& data = mData;
+	if (clockEdge || data.waitingForInput())
 	{
 		if (mRecord)
 		{
@@ -142,7 +143,6 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		{
 			unsigned int dataoutput = 0;
 
-			Data& data = mData;
 			data.simulate(realtime(time), value , valuePosEdge , valueNegEdge);
 			dataoutput = data.getData();
 

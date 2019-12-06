@@ -22,6 +22,11 @@ public:
 		return mData;
 	}
 
+	const bool waitingForInput()
+	{
+		return mWaitingForMask || mWaitingForPositiveEdge || mWaitingForNegativeEdge;
+	}
+
 private:
 	unsigned int mData;
 	std::ifstream mFile;
