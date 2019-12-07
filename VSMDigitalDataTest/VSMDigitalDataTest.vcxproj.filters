@@ -29,6 +29,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Test1.txt" />
+    <Text Include="Test2.txt" />
+    <Text Include="Test3.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="t.bin" />

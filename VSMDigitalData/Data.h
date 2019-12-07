@@ -13,6 +13,8 @@ public:
 	Data();
 	virtual ~Data();
 
+	void clear();
+
 	void init(const CHAR *filename);
 
 	void simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge);
@@ -29,7 +31,7 @@ public:
 
 private:
 	unsigned int mData;
-	std::ifstream mFile;
+	std::ifstream *mFile;
 	std::string mCurrentLine;
 
 	std::ifstream mInputData;
@@ -37,6 +39,7 @@ private:
 	int mInputDataNumBytes;
 
 	std::list<int> mCountingBits;
+	std::list<std::ifstream*> mFiles;
 
 	unsigned int mWaitingForPositiveEdge , mWaitingForNegativeEdge;
 	unsigned int mWaitingForMask, mWaitingForData;

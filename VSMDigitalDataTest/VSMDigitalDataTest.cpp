@@ -213,4 +213,6 @@ int main()
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x0);
+
+	data.clear();
 }

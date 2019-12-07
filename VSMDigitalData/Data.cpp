@@ -42,18 +42,33 @@ std::string getNextTok(std::string& str , const std::string pattern = ", \f\n\r\
 	return ret;
 }
 
-Data::Data()
+Data::Data() : mFile(0)
 {
 }
 
 Data::~Data()
 {
+	clear();
+}
+
+void Data::clear()
+{
+	delete mFile;
+	mFile = 0;
+	while (!mFiles.empty())
+	{
+		std::ifstream *file = mFiles.back();
+		delete file;
+		mFiles.pop_back();
+	}
 }
 
 void Data::init(const CHAR *filename)
 {
+	clear();
 	mData = 0;
-	mFile.open(filename);
+	mFile = new std::ifstream();
+	mFile->open(filename);
 
 	mWaitingForPositiveEdge = 0;
 	mWaitingForNegativeEdge = 0;
@@ -82,7 +97,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 	}
 	mWaitingForNegativeEdge = 0;
 
-	if (mFile.eof())
+	if (mFile->eof())
 	{
 		return;
 	}
@@ -159,13 +174,21 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		}
 
 
-		while (mCurrentLine.empty() && !mFile.eof())
+		while (mCurrentLine.empty() && !mFile->eof())
 		{
-			std::getline(mFile, mCurrentLine);
+			std::getline(*mFile, mCurrentLine);
 			mCurrentLine = trim(mCurrentLine);
 		}
-		if (mFile.eof())
+		if (mFile->eof())
 		{
+			delete mFile;
+			mFile = 0;
+			if (!mFiles.empty())
+			{
+				mFile = mFiles.back();
+				mFiles.pop_back();
+				continue;
+			}
 			break;
 		}
 
@@ -303,6 +326,19 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 
 			gotNextOutput = true;
 			break;
+		}
+
+		// !Test2.txt
+		if (mCurrentLine.at(0) == '!')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+			mFiles.push_back(mFile);
+
+			mFile = new std::ifstream();
+			mFile->open(mCurrentLine);
+
+			mCurrentLine.clear();
+			continue;
 		}
 
 		printf("Unkown comand: %s\n", mCurrentLine.c_str());
