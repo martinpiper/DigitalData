@@ -54,6 +54,7 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		{
 			mData.init(mFilename.c_str());
 		}
+		mTryGetData = true;
 	}
 }
 
@@ -116,10 +117,20 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 	}
 
-	bool clockEdge = (bool) mPinCLOCK->isposedge();
-
 	Data& data = mData;
-	if (clockEdge || data.waitingForInput())
+	if (data.waitingForInput())
+	{
+		data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+		if (data.waitingForInput())
+		{
+			mTryGetData = false;
+			return;
+		}
+	}
+
+
+	bool clockEdge = (bool)mPinCLOCK->isposedge();
+	if (clockEdge)
 	{
 		if (mRecord)
 		{
@@ -142,8 +153,14 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		else
 		{
 			unsigned int dataoutput = 0;
+			bool wasWaiting = data.waitingForInput();
 
-			data.simulate(realtime(time), value , valuePosEdge , valueNegEdge);
+			if (mTryGetData)
+			{
+				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+			}
+			mTryGetData = true;
+
 			dataoutput = data.getData();
 
 			for (i = 0; i < 32; i++)

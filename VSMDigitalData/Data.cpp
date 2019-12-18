@@ -78,6 +78,11 @@ void Data::init(const CHAR *filename)
 
 void Data::simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge)
 {
+	if (!mFile)
+	{
+		return;
+	}
+
 	if (mWaitingForMask && ((dInput & mWaitingForMask) != mWaitingForData))
 	{
 		return;

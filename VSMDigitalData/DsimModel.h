@@ -36,4 +36,5 @@ private:
 	bool mRecord;
 
 	Data mData;
+	bool mTryGetData;
 };

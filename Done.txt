@@ -72,3 +72,8 @@
 
 
 * Include definition files, push the current FP and open a new file, then at the end, pop the older FP
+
+
+
+
+* Fixed a bug in DigitalData where waiting for an input value caused the first value to be skipped

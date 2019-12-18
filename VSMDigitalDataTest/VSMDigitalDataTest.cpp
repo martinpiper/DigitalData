@@ -15,15 +15,18 @@ int main()
 	unsigned int value;
 
 	data.simulate(0, 0, 0x00, 0x00);
+	assert(data.waitingForInput() == false);
 	value = data.getData();
 	assert(value == 0x0);
 
 	//
 	data.simulate(0, 0, 0x00, 0x00);
+	assert(data.waitingForInput() == false);
 	value = data.getData();
 	assert(value == 0x1);
 
 	data.simulate(0, 0, 0x00, 0x00);
+	assert(data.waitingForInput() == false);
 	value = data.getData();
 	assert(value == 0x123);
 
@@ -193,26 +196,40 @@ int main()
 	data.simulate(0, 0, 0x00, 0x00);
 
 	data.simulate(0, 0, 0x00, 0x01);
+	assert(data.waitingForInput() == false);
 	value = data.getData();
 	assert(value == 0x4);
 	data.simulate(0, 0, 0x00, 0x00);
 
 	// w$ffffffff,$1234
 	data.simulate(0, 0, 0x00, 0x00);
+	assert(data.waitingForInput() == true);
 	value = data.getData();
 	assert(value == 0x200);
 	data.simulate(0, 0, 0x00, 0x00);
+	assert(data.waitingForInput() == true);
 	value = data.getData();
 	assert(value == 0x200);
 	data.simulate(0, 0x12, 0x00, 0x00);
+	assert(data.waitingForInput() == true);
 	value = data.getData();
 	assert(value == 0x200);
 	data.simulate(0, 0x1234, 0x00, 0x00);
+	assert(data.waitingForInput() == false);
 	value = data.getData();
 	assert(value == 0x301);
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x0);
+
+	// Simulate off the end of the file, to check the correct handling of the file handle stack
+	data.simulate(0, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x100);
+
+	data.simulate(0, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x100);
 
 	data.clear();
 }
