@@ -1,2 +1,6 @@
+* At the moment inside DsimModel.cpp there is untested logic for "mTryGetData" and when to respond to a successful wait waitingForInput() by getting the next data value
+
+
+
 * Add defines, simple key value replacement
 	* #string value

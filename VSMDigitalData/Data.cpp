@@ -346,7 +346,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			continue;
 		}
 
-		printf("Unkown comand: %s\n", mCurrentLine.c_str());
+		printf("Unknown comand: %s\n", mCurrentLine.c_str());
 		break;
 	}
 }
