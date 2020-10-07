@@ -29,10 +29,23 @@ public:
 		return mWaitingForMask || mWaitingForPositiveEdge || mWaitingForNegativeEdge;
 	}
 
+	const bool anyError()
+	{
+		return !mError.empty();
+	}
+
+	const std::string &getError()
+	{
+		return mError;
+	}
+
 private:
+	void CheckFileIsOpen(std::ifstream * toCheck);
+
 	unsigned int mData;
 	std::ifstream *mFile;
 	std::string mCurrentLine;
+	std::string mError;
 
 	std::ifstream mInputData;
 	std::list<int> mInputDataBits;

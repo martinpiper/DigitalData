@@ -121,6 +121,10 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	if (data.waitingForInput())
 	{
 		data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+		if (data.anyError())
+		{
+			mInstance->fatal((CHAR*) data.getError().c_str());
+		}
 		if (data.waitingForInput())
 		{
 			mTryGetData = false;
@@ -158,6 +162,10 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			if (mTryGetData)
 			{
 				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+			}
+			if (data.anyError())
+			{
+				mInstance->fatal((CHAR*)data.getError().c_str());
 			}
 			mTryGetData = true;
 

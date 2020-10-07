@@ -61,6 +61,16 @@ void Data::clear()
 		delete file;
 		mFiles.pop_back();
 	}
+	mError.clear();
+}
+
+void Data::CheckFileIsOpen(std::ifstream *toCheck)
+{
+	if (toCheck->is_open())
+	{
+		return;
+	}
+	mError = "Could not open file: " + mCurrentLine;
 }
 
 void Data::init(const CHAR *filename)
@@ -68,7 +78,10 @@ void Data::init(const CHAR *filename)
 	clear();
 	mData = 0;
 	mFile = new std::ifstream();
+	mCurrentLine = filename;
 	mFile->open(filename);
+	CheckFileIsOpen(mFile);
+	mCurrentLine.clear();
 
 	mWaitingForPositiveEdge = 0;
 	mWaitingForNegativeEdge = 0;
@@ -78,6 +91,10 @@ void Data::init(const CHAR *filename)
 
 void Data::simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge)
 {
+	if (!mError.empty())
+	{
+		return;
+	}
 	if (!mFile)
 	{
 		return;
@@ -130,6 +147,10 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 	bool gotNextOutput = false;
 	while (!gotNextOutput)
 	{
+		if (!mError.empty())
+		{
+			return;
+		}
 		if (mInputData.is_open() && (mInputData.eof() || mInputDataNumBytes == 0))
 		{
 			mInputData.close();
@@ -260,6 +281,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			if (mCurrentLine.length() > 1)
 			{
 				mInputData.open(mCurrentLine, std::ios_base::in | std::ios_base::binary);
+				CheckFileIsOpen(&mInputData);
 				mInputData.seekg((size_t)startPos, std::ios::beg);
 			}
 			mCurrentLine.clear();
@@ -341,6 +363,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 
 			mFile = new std::ifstream();
 			mFile->open(mCurrentLine);
+			CheckFileIsOpen(mFile);
 
 			mCurrentLine.clear();
 			continue;
