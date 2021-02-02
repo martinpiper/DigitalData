@@ -4,11 +4,19 @@
 
 VOID ActiveModel::initialize(ICOMPONENT *cpt)
 {
+	strcpy(mDisplayFileAndLine, "none");
+
 	mComponent = cpt;
 	if (!mComponent)
 	{
 		return;
 	}
+
+	BOX textbox;
+	mComponent->getsymbolarea(-1, &textbox);
+
+	mDisplayFileAndLinePos.x = textbox.left + 700;
+	mDisplayFileAndLinePos.y = textbox.top + 150;
 }
 
 ISPICEMODEL *ActiveModel::getspicemodel (CHAR *primitive)
@@ -58,6 +66,9 @@ void ActiveModel::drawScreen(void)
 	{
 		return;
 	}
+
+	mComponent->settextcolour(0);
+	mComponent->drawtext(mDisplayFileAndLinePos.x, mDisplayFileAndLinePos.y, 0, TXJ_LEFT | TXJ_MIDDLE, mDisplayFileAndLine);
 }
 
 BOOL ActiveModel::actuate (WORD key, INT x, INT y, DWORD flags)

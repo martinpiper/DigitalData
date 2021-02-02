@@ -64,6 +64,8 @@ VOID DsimModel::runctrl (RUNMODES mode)
 	{
 	case RM_START:
 		mDoStart = true;
+		mNotEarlierThan = 0;
+		mNumWarnings = 0;
 		break;
 	case RM_SUSPEND:
 		if (0 != mPatternFP)
@@ -118,18 +120,26 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	}
 
 	Data& data = mData;
+
 	if (data.waitingForInput())
 	{
+		// Stop any data trigger on the positive clock edge for a tick
+		mTryGetData = false;
+
+		if (mActiveModel)
+		{
+			sprintf(mActiveModel->mDisplayFileAndLine, "Waiting: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+		}
 		data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
 		if (data.anyError())
 		{
-			mInstance->fatal((CHAR*) data.getError().c_str());
+			mInstance->fatal((CHAR*)data.getError().c_str());
 		}
 		if (data.waitingForInput())
 		{
-			mTryGetData = false;
 			return;
 		}
+		return;
 	}
 
 
@@ -156,41 +166,63 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 		else
 		{
-			unsigned int dataoutput = 0;
-			bool wasWaiting = data.waitingForInput();
-
 			if (mTryGetData)
 			{
-				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
-			}
-			if (data.anyError())
-			{
-				mInstance->fatal((CHAR*)data.getError().c_str());
-			}
-			mTryGetData = true;
-
-			dataoutput = data.getData();
-
-			for (i = 0; i < 32; i++)
-			{
-				if (dataoutput & (1 << i))
+				if (realtime(time) < mNotEarlierThan)
 				{
-//					if (!ishigh(mPinD[i]->istate()))
+					if (mNumWarnings < 100)
 					{
-						mPinD[i]->setstate(time, 1, SHI);
+						// Avoid any early triggers before the rising edge for memory write has completed
+						mInstance->warning((CHAR *)"Early data trigger ignored");
+
+						mNumWarnings++;
+						if (mNumWarnings >= 100)
+						{
+							mInstance->warning((CHAR *)"Too many warnings, others will be not be shown");
+						}
+
 					}
+					return;
+				}
+				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+				if (mActiveModel)
+				{
+					sprintf(mActiveModel->mDisplayFileAndLine, "Running: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+				}
+
+				if (data.anyError())
+				{
+					mInstance->fatal((CHAR*)data.getError().c_str());
 				}
 				else
 				{
-//					if (!islow(mPinD[i]->istate()))
+					unsigned int dataoutput = data.getData();
+
+					for (i = 0; i < 32; i++)
 					{
-						mPinD[i]->setstate(time, 1, SLO);
+						if (dataoutput & (1 << i))
+						{
+							//					if (!ishigh(mPinD[i]->istate()))
+							{
+								mPinD[i]->setstate(time, 1, SHI);
+							}
+						}
+						else
+						{
+							//					if (!islow(mPinD[i]->istate()))
+							{
+								mPinD[i]->setstate(time, 1, SLO);
+							}
+						}
 					}
+
+					mPinMEMWRITE->setstate(time, 1, SHI);
+					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow), 1, SLO);
+					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToHigh), 1, SHI);
+					mNotEarlierThan = realtime(time) + mToHigh + (mToHigh - mToLow);
 				}
 			}
-
-			mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow), 1, SLO);
-			mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToHigh), 1, SHI);
+			mTryGetData = true;
 		}
 	}
 }

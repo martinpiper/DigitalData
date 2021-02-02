@@ -18,6 +18,10 @@ public:
 	void drawText(void);
 	void drawScreen(void);
 
+	CHAR mDisplayFileAndLine[256];
+
 private:
 	ICOMPONENT *mComponent;
+
+	POINT mDisplayFileAndLinePos;
 };

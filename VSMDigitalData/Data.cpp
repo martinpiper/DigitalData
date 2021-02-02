@@ -60,8 +60,11 @@ void Data::clear()
 		std::ifstream *file = mFiles.back();
 		delete file;
 		mFiles.pop_back();
+		mLineNumbers.pop_back();
 	}
 	mError.clear();
+	mFiles.clear();
+	mLineNumbers.clear();
 }
 
 void Data::CheckFileIsOpen(std::ifstream *toCheck)
@@ -78,6 +81,8 @@ void Data::init(const CHAR *filename)
 	clear();
 	mData = 0;
 	mFile = new std::ifstream();
+	mCurrentFilename = filename;
+	mCurrentLineNumber = 0;
 	mCurrentLine = filename;
 	mFile->open(filename);
 	CheckFileIsOpen(mFile);
@@ -99,6 +104,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 	{
 		return;
 	}
+	bool wasWaiting = waitingForInput();
 
 	if (mWaitingForMask && ((dInput & mWaitingForMask) != mWaitingForData))
 	{
@@ -118,6 +124,12 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		return;
 	}
 	mWaitingForNegativeEdge = 0;
+
+	if (wasWaiting)
+	{
+		// To avoid data being fetched straight after the wait
+		return;
+	}
 
 	if (mFile->eof())
 	{
@@ -203,6 +215,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		while (mCurrentLine.empty() && !mFile->eof())
 		{
 			std::getline(*mFile, mCurrentLine);
+			mCurrentLineNumber++;
 			mCurrentLine = trim(mCurrentLine);
 		}
 		if (mFile->eof())
@@ -213,6 +226,8 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			{
 				mFile = mFiles.back();
 				mFiles.pop_back();
+				mCurrentLineNumber = mLineNumbers.back();
+				mLineNumbers.pop_back();
 				continue;
 			}
 			break;
@@ -360,9 +375,12 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		{
 			mCurrentLine = mCurrentLine.substr(1);
 			mFiles.push_back(mFile);
+			mLineNumbers.push_back(mCurrentLineNumber);
 
 			mFile = new std::ifstream();
 			mFile->open(mCurrentLine);
+			mCurrentFilename = mCurrentLine;
+			mCurrentLineNumber = 0;
 			CheckFileIsOpen(mFile);
 
 			mCurrentLine.clear();

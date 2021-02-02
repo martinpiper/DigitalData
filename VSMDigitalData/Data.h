@@ -36,7 +36,22 @@ public:
 
 	const std::string &getError()
 	{
-		return mError;
+		return mCurrentFilename + " : " + std::to_string(mCurrentLineNumber) + " : " + mError;
+	}
+
+	const std::string &getCurrentFilename()
+	{
+		return mCurrentFilename;
+	}
+
+	const int getCurrentLineNumber()
+	{
+		return mCurrentLineNumber;
+	}
+
+	const int getWaitingForData()
+	{
+		return mWaitingForData;
 	}
 
 private:
@@ -46,6 +61,8 @@ private:
 	std::ifstream *mFile;
 	std::string mCurrentLine;
 	std::string mError;
+	std::string mCurrentFilename;
+	int mCurrentLineNumber;
 
 	std::ifstream mInputData;
 	std::list<int> mInputDataBits;
@@ -53,6 +70,7 @@ private:
 
 	std::list<int> mCountingBits;
 	std::list<std::ifstream*> mFiles;
+	std::list<int> mLineNumbers;
 
 	unsigned int mWaitingForPositiveEdge , mWaitingForNegativeEdge;
 	unsigned int mWaitingForMask, mWaitingForData;

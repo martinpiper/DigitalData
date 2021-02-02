@@ -37,4 +37,6 @@ private:
 
 	Data mData;
 	bool mTryGetData;
+	REALTIME mNotEarlierThan;
+	int mNumWarnings;
 };
