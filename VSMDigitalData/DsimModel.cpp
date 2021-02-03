@@ -23,8 +23,19 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 
 	t = mInstance->getstrval((CHAR*)"TOLOW");
 	mToLow = atof(t);
-	t = mInstance->getstrval((CHAR*)"TOHI");
-	mToHigh = atof(t);
+	t = mInstance->getstrval((CHAR*)"THENTOHI");
+	mThenToHigh = atof(t);
+	t = mInstance->getstrval((CHAR*)"THENGUARD");
+	mThenGuard = atof(t);
+
+	t = mInstance->getstrval((CHAR*)"FORCEHIBEFORE");
+	mForceHiBefore = atof(t);
+	t = mInstance->getstrval((CHAR*)"FORCEHIAFTER");
+	mForceHiAfter = atof(t);
+	t = mInstance->getstrval((CHAR*)"FORCELOBEFORE");
+	mForceLoBefore = atof(t);
+	t = mInstance->getstrval((CHAR*)"FORCELOAFTER");
+	mForceLoAfter = atof(t);
 
 	t = mInstance->getstrval((CHAR*)"RECORD");
 	mRecord = atoi(t) ? true : false;
@@ -198,28 +209,58 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				{
 					unsigned int dataoutput = data.getData();
 
+					if (mForceLoBefore > 0.0f)
+					{
+						for (i = 0; i < 32; i++)
+						{
+							mPinD[i]->setstate(time, 1, SLO);
+						}
+					}
+					if (mForceHiBefore > 0.0f)
+					{
+						for (i = 0; i < 32; i++)
+						{
+							mPinD[i]->setstate(time, 1, SHI);
+						}
+					}
+
 					for (i = 0; i < 32; i++)
 					{
 						if (dataoutput & (1 << i))
 						{
 							//					if (!ishigh(mPinD[i]->istate()))
 							{
-								mPinD[i]->setstate(time, 1, SHI);
+								mPinD[i]->setstate(dsimtime(realtime(time) + max(mForceLoBefore , mForceHiBefore)), 1, SHI);
 							}
 						}
 						else
 						{
 							//					if (!islow(mPinD[i]->istate()))
 							{
-								mPinD[i]->setstate(time, 1, SLO);
+								mPinD[i]->setstate(dsimtime(realtime(time) + max(mForceLoBefore, mForceHiBefore)), 1, SLO);
 							}
+						}
+					}
+
+					if (mForceLoAfter > 0.0f)
+					{
+						for (i = 0; i < 32; i++)
+						{
+							mPinD[i]->setstate(dsimtime(realtime(time) + mForceLoAfter), 1, SLO);
+						}
+					}
+					if (mForceHiAfter > 0.0f)
+					{
+						for (i = 0; i < 32; i++)
+						{
+							mPinD[i]->setstate(dsimtime(realtime(time) + mForceHiAfter), 1, SHI);
 						}
 					}
 
 					mPinMEMWRITE->setstate(time, 1, SHI);
 					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow), 1, SLO);
-					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToHigh), 1, SHI);
-					mNotEarlierThan = realtime(time) + mToHigh + (mToHigh - mToLow);
+					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow + mThenToHigh), 1, SHI);
+					mNotEarlierThan = realtime(time) + mToLow + mThenToHigh + mThenGuard;
 				}
 			}
 			mTryGetData = true;

@@ -32,7 +32,9 @@ private:
 	bool mDoStart;
 
 	std::string mFilename;
-	double mToLow, mToHigh;
+	double mToLow, mThenToHigh, mThenGuard;
+	double mForceHiBefore, mForceHiAfter;
+	double mForceLoBefore, mForceLoAfter;
 	bool mRecord;
 
 	Data mData;
