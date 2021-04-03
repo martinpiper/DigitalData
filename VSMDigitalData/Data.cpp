@@ -69,6 +69,10 @@ void Data::clear()
 
 void Data::CheckFileIsOpen(std::ifstream *toCheck)
 {
+	if (!toCheck)
+	{
+		return;
+	}
 	if (toCheck->is_open())
 	{
 		return;

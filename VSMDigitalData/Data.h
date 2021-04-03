@@ -54,6 +54,11 @@ public:
 		return mWaitingForData;
 	}
 
+	const bool anyFileOpen()
+	{
+		return mFile;
+	}
+
 private:
 	void CheckFileIsOpen(std::ifstream * toCheck);
 

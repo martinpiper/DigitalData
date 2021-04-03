@@ -207,60 +207,67 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				}
 				else
 				{
-					unsigned int dataoutput = data.getData();
+					if (data.anyFileOpen())
+					{
+						unsigned int dataoutput = data.getData();
 
-					if (mForceLoBefore > 0.0f)
-					{
-						for (i = 0; i < 32; i++)
+						if (mForceLoBefore > 0.0f)
 						{
-							mPinD[i]->setstate(time, 1, SLO);
-						}
-					}
-					if (mForceHiBefore > 0.0f)
-					{
-						for (i = 0; i < 32; i++)
-						{
-							mPinD[i]->setstate(time, 1, SHI);
-						}
-					}
-
-					for (i = 0; i < 32; i++)
-					{
-						if (dataoutput & (1 << i))
-						{
-							//					if (!ishigh(mPinD[i]->istate()))
+							for (i = 0; i < 32; i++)
 							{
-								mPinD[i]->setstate(dsimtime(realtime(time) + max(mForceLoBefore , mForceHiBefore)), 1, SHI);
+								mPinD[i]->setstate(time, 1, SLO);
 							}
 						}
-						else
+						if (mForceHiBefore > 0.0f)
 						{
-							//					if (!islow(mPinD[i]->istate()))
+							for (i = 0; i < 32; i++)
 							{
-								mPinD[i]->setstate(dsimtime(realtime(time) + max(mForceLoBefore, mForceHiBefore)), 1, SLO);
+								mPinD[i]->setstate(time, 1, SHI);
 							}
 						}
-					}
 
-					if (mForceLoAfter > 0.0f)
-					{
 						for (i = 0; i < 32; i++)
 						{
-							mPinD[i]->setstate(dsimtime(realtime(time) + mForceLoAfter), 1, SLO);
+							if (dataoutput & (1 << i))
+							{
+								//					if (!ishigh(mPinD[i]->istate()))
+								{
+									mPinD[i]->setstate(dsimtime(realtime(time) + max(mForceLoBefore, mForceHiBefore)), 1, SHI);
+								}
+							}
+							else
+							{
+								//					if (!islow(mPinD[i]->istate()))
+								{
+									mPinD[i]->setstate(dsimtime(realtime(time) + max(mForceLoBefore, mForceHiBefore)), 1, SLO);
+								}
+							}
 						}
-					}
-					if (mForceHiAfter > 0.0f)
-					{
-						for (i = 0; i < 32; i++)
-						{
-							mPinD[i]->setstate(dsimtime(realtime(time) + mForceHiAfter), 1, SHI);
-						}
-					}
 
-					mPinMEMWRITE->setstate(time, 1, SHI);
-					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow), 1, SLO);
-					mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow + mThenToHigh), 1, SHI);
-					mNotEarlierThan = realtime(time) + mToLow + mThenToHigh + mThenGuard;
+						if (mForceLoAfter > 0.0f)
+						{
+							for (i = 0; i < 32; i++)
+							{
+								mPinD[i]->setstate(dsimtime(realtime(time) + mForceLoAfter), 1, SLO);
+							}
+						}
+						if (mForceHiAfter > 0.0f)
+						{
+							for (i = 0; i < 32; i++)
+							{
+								mPinD[i]->setstate(dsimtime(realtime(time) + mForceHiAfter), 1, SHI);
+							}
+						}
+
+						mPinMEMWRITE->setstate(time, 1, SHI);
+						mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow), 1, SLO);
+						mPinMEMWRITE->setstate(dsimtime(realtime(time) + mToLow + mThenToHigh), 1, SHI);
+						mNotEarlierThan = realtime(time) + mToLow + mThenToHigh + mThenGuard;
+					}
+					else
+					{
+						sprintf(mActiveModel->mDisplayFileAndLine, "Stopped: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+					}
 				}
 			}
 			mTryGetData = true;
