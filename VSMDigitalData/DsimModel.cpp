@@ -40,6 +40,11 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	t = mInstance->getstrval((CHAR*)"RECORD");
 	mRecord = atoi(t) ? true : false;
 
+	t = mInstance->getstrval((CHAR*)"OUTPUTTIME");
+	mOutputTime = atoi(t) ? true : false;
+	t = mInstance->getstrval((CHAR*)"OUTPUTTIMEDELTA");
+	mOutputTimeDelta = atoi(t) ? true : false;
+
 	int i;
 	for (i = 0; i < 32; i++)
 	{
@@ -77,6 +82,7 @@ VOID DsimModel::runctrl (RUNMODES mode)
 		mDoStart = true;
 		mNotEarlierThan = 0;
 		mNumWarnings = 0;
+		mLastTime = 0;
 		break;
 	case RM_SUSPEND:
 		if (0 != mPatternFP)
@@ -159,7 +165,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	{
 		if (mRecord)
 		{
-			double rtime = realtime(time);
+			REALTIME rtime = realtime(time);
 
 			int i;
 			value = 0;
@@ -172,8 +178,18 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				}
 			}
 
-//			fprintf(mPatternFP, ";@time:%f\n", rtime);
+			if (mOutputTime)
+			{
+				fprintf(mPatternFP, ";@time:%f\n", rtime);
+			}
+			if (mOutputTimeDelta)
+			{
+				REALTIME delta = rtime - mLastTime;
+				fprintf(mPatternFP, ";delta:%f\n", delta);
+			}
 			fprintf(mPatternFP, "d$%08x\n", value);
+
+			mLastTime = rtime;
 		}
 		else
 		{

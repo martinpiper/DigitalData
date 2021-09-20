@@ -36,9 +36,11 @@ private:
 	double mForceHiBefore, mForceHiAfter;
 	double mForceLoBefore, mForceLoAfter;
 	bool mRecord;
+	bool mOutputTime , mOutputTimeDelta;
 
 	Data mData;
 	bool mTryGetData;
 	REALTIME mNotEarlierThan;
+	REALTIME mLastTime;
 	int mNumWarnings;
 };
