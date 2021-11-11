@@ -96,6 +96,10 @@ VOID DsimModel::runctrl (RUNMODES mode)
 			fclose(mPatternFP);
 		}
 		mPatternFP = 0;
+		if (!mRecord)
+		{
+			mData.clear();
+		}
 		break;
 	}
 }
