@@ -37,6 +37,8 @@ private:
 	double mForceLoBefore, mForceLoAfter;
 	bool mRecord;
 	bool mOutputTime , mOutputTimeDelta;
+	unsigned long mOutputUsingWaitsValue;
+	unsigned long mOutputUsingWaitsValueLast;
 
 	Data mData;
 	bool mTryGetData;

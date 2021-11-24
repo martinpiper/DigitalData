@@ -77,3 +77,7 @@
 
 
 * Fixed a bug in DigitalData where waiting for an input value caused the first value to be skipped
+
+
+
+* Added the option of recording the wait value with a supplied mask

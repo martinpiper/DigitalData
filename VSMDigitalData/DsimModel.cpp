@@ -45,6 +45,21 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	t = mInstance->getstrval((CHAR*)"OUTPUTTIMEDELTA");
 	mOutputTimeDelta = atoi(t) ? true : false;
 
+	t = mInstance->getstrval((CHAR*)"OUTPUTUSINGWAITS");
+	mOutputUsingWaitsValue = 0;
+	mOutputUsingWaitsValueLast = 0;
+	if (t != 0)
+	{
+		if (t[0] == '$')
+		{
+			mOutputUsingWaitsValue = std::strtoul(t+1, nullptr, 16);
+		}
+		else
+		{
+			mOutputUsingWaitsValue = std::strtoul(t, nullptr, 10);
+		}
+	}
+
 	int i;
 	for (i = 0; i < 32; i++)
 	{
@@ -172,13 +187,13 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			REALTIME rtime = realtime(time);
 
 			int i;
-			value = 0;
+			unsigned int rvalue = 0;
 			for (i = 31; i >= 0; i--)
 			{
-				value <<= 1;
+				rvalue <<= 1;
 				if (ishigh(mPinD[i]->istate()))
 				{
-					value |= 1;
+					rvalue |= 1;
 				}
 			}
 
@@ -191,7 +206,18 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				REALTIME delta = rtime - mLastTime;
 				fprintf(mPatternFP, ";delta:%f\n", delta);
 			}
-			fprintf(mPatternFP, "d$%08x\n", value);
+			if (mOutputUsingWaitsValue)
+			{
+				unsigned long waitValue = mOutputUsingWaitsValue & value;
+				// Only output the wait if it has changed
+				if (mOutputUsingWaitsValueLast != waitValue)
+				{
+					// Deliberately use the full value, without the mask, so we can use it to include extra debug info if needed
+					fprintf(mPatternFP, "w$%08x,$%08x\n", mOutputUsingWaitsValue, value);
+					mOutputUsingWaitsValueLast = waitValue;
+				}
+			}
+			fprintf(mPatternFP, "d$%08x\n", rvalue);
 
 			mLastTime = rtime;
 		}
