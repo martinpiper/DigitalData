@@ -42,7 +42,7 @@ std::string getNextTok(std::string& str , const std::string pattern = ", \f\n\r\
 	return ret;
 }
 
-Data::Data() : mFile(0)
+Data::Data() : mFile(0) , mWaitingForTime(-1.0f)
 {
 }
 
@@ -60,10 +60,12 @@ void Data::clear()
 		std::ifstream *file = mFiles.back();
 		delete file;
 		mFiles.pop_back();
+		mFileNames.pop_back();
 		mLineNumbers.pop_back();
 	}
 	mError.clear();
 	mFiles.clear();
+	mFileNames.clear();
 	mLineNumbers.clear();
 }
 
@@ -96,6 +98,7 @@ void Data::init(const CHAR *filename)
 	mWaitingForNegativeEdge = 0;
 	mWaitingForMask = 0;
 	mWaitingForData = 0;
+	mWaitingForTime = -1.0f;
 }
 
 void Data::simulate(const double time, const unsigned int dInput, const unsigned int dInputPositiveEdge, const unsigned int dInputNegativeEdge)
@@ -109,6 +112,12 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		return;
 	}
 	bool wasWaiting = waitingForInput();
+
+	if ((mWaitingForTime >= 0.0f) && (time < mWaitingForTime))
+	{
+		return;
+	}
+	mWaitingForTime = -1.0f;
 
 	if (mWaitingForMask && ((dInput & mWaitingForMask) != mWaitingForData))
 	{
@@ -230,6 +239,10 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			{
 				mFile = mFiles.back();
 				mFiles.pop_back();
+
+				mCurrentFilename = mFileNames.back();
+				mFileNames.pop_back();
+
 				mCurrentLineNumber = mLineNumbers.back();
 				mLineNumbers.pop_back();
 				continue;
@@ -374,11 +387,28 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			break;
 		}
 
+		// @time:0.735000
+		if (mCurrentLine.compare(0 , 6 , "@time:") == 0)
+		{
+			mCurrentLine = mCurrentLine.substr(6);
+			std::string tok = getNextTok(mCurrentLine);
+			mWaitingForTime = atof(tok.c_str());
+			if (mWaitingForTime >= time)
+			{
+				mWaitingForTime = -1.0f;
+				continue;
+			}
+
+			gotNextOutput = true;
+			break;
+		}
+
 		// !Test2.txt
 		if (mCurrentLine.at(0) == '!')
 		{
 			mCurrentLine = mCurrentLine.substr(1);
 			mFiles.push_back(mFile);
+			mFileNames.push_back(mCurrentFilename);
 			mLineNumbers.push_back(mCurrentLineNumber);
 
 			mFile = new std::ifstream();

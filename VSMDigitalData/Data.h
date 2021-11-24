@@ -26,7 +26,7 @@ public:
 
 	const bool waitingForInput()
 	{
-		return mWaitingForMask || mWaitingForPositiveEdge || mWaitingForNegativeEdge;
+		return mWaitingForMask || mWaitingForPositiveEdge || mWaitingForNegativeEdge || (mWaitingForTime >= 0.0f);
 	}
 
 	const bool anyError()
@@ -34,7 +34,7 @@ public:
 		return !mError.empty();
 	}
 
-	const std::string &getError()
+	const std::string getError()
 	{
 		return mCurrentFilename + " : " + std::to_string(mCurrentLineNumber) + " : " + mError;
 	}
@@ -75,8 +75,10 @@ private:
 
 	std::list<int> mCountingBits;
 	std::list<std::ifstream*> mFiles;
+	std::list<std::string> mFileNames;
 	std::list<int> mLineNumbers;
 
 	unsigned int mWaitingForPositiveEdge , mWaitingForNegativeEdge;
 	unsigned int mWaitingForMask, mWaitingForData;
+	double mWaitingForTime;
 };

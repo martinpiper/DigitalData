@@ -181,9 +181,19 @@ int main()
 	assert(value == 0xa6b);
 
 	data.simulate(0, 0, 0x01, 0x00);
+	// After a successful wait, it returns waiting for the next clock cycle to trigger the data fetch
+	value = data.getData();
+	assert(value == 0xa6b);
+
+	data.simulate(0, 0, 0x01, 0x00);
 	value = data.getData();
 	assert(value == 0x1);
 	data.simulate(0, 0, 0x00, 0x00);
+
+	data.simulate(0, 0, 0x01, 0x00);
+	// After a successful wait, it returns waiting for the next clock cycle to trigger the data fetch
+	value = data.getData();
+	assert(value == 0x101);
 
 	data.simulate(0, 0, 0x01, 0x00);
 	value = data.getData();
@@ -192,11 +202,19 @@ int main()
 
 	data.simulate(0, 0, 0x00, 0x01);
 	value = data.getData();
+	assert(value == 0x102);
+
+	data.simulate(0, 0, 0x00, 0x01);
+	value = data.getData();
 	assert(value == 0x3);
 	data.simulate(0, 0, 0x00, 0x00);
 
 	data.simulate(0, 0, 0x00, 0x01);
 	assert(data.waitingForInput() == false);
+	value = data.getData();
+	assert(value == 0x103);
+
+	data.simulate(0, 0, 0x00, 0x01);
 	value = data.getData();
 	assert(value == 0x4);
 	data.simulate(0, 0, 0x00, 0x00);
@@ -216,16 +234,34 @@ int main()
 	assert(value == 0x200);
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	assert(data.waitingForInput() == false);
+	data.simulate(0, 0x1234, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x301);
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x0);
 
+	// @time tests
+	data.simulate(0, 0x0, 0x00, 0x00);
+	assert(data.waitingForInput() == true);
+	data.simulate(0.735f, 0x0, 0x00, 0x00);
+	assert(data.waitingForInput() == false);
+	data.simulate(0.735f, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x12345678);
+
+	data.simulate(0.735f, 0x0, 0x00, 0x00);
+	assert(data.waitingForInput() == true);
+
+	data.simulate(1.0f, 0x0, 0x00, 0x00);
+	data.simulate(1.0f, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x87654321);
+
 	// Simulate off the end of the file, to check the correct handling of the file handle stack
 	data.simulate(0, 0x0, 0x00, 0x00);
 	value = data.getData();
-	assert(value == 0x100);
+	assert(value == 0x00);
 
 	data.simulate(0, 0x0, 0x00, 0x00);
 	value = data.getData();
