@@ -81,3 +81,9 @@
 
 
 * Added the option of recording the wait value with a supplied mask
+
+
+
+
+* For: if (rvalue == 0)
+	Make this a configuration item to filter out null writes

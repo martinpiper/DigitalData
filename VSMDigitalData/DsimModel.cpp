@@ -60,6 +60,13 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		}
 	}
 
+	t = mInstance->getstrval((CHAR*)"OUTPUTIGNOREZEROWRITES");
+	mOutputIgnoreZeroWrites = false;
+	if (t != 0)
+	{
+		mOutputIgnoreZeroWrites = atoi(t) ? true : false;
+	}
+
 	int i;
 	for (i = 0; i < 32; i++)
 	{
@@ -197,6 +204,10 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				}
 			}
 
+			if (mOutputIgnoreZeroWrites && rvalue == 0)
+			{
+				return;
+			}
 			if (mOutputTime)
 			{
 				fprintf(mPatternFP, ";@time:%f\n", rtime);

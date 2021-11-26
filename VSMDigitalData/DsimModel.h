@@ -45,4 +45,6 @@ private:
 	REALTIME mNotEarlierThan;
 	REALTIME mLastTime;
 	int mNumWarnings;
+
+	bool mOutputIgnoreZeroWrites;
 };

@@ -119,7 +119,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 	}
 	mWaitingForTime = -1.0f;
 
-	if (mWaitingForMask && ((dInput & mWaitingForMask) != mWaitingForData))
+	if (mWaitingForMask && ((dInput & mWaitingForMask) != (mWaitingForData & mWaitingForMask)))
 	{
 		return;
 	}
@@ -381,7 +381,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			std::string tok = getNextTok(mCurrentLine);
 			mWaitingForMask = ParamToUNum(tok.c_str());
 			tok = getNextTok(mCurrentLine);
-			mWaitingForData = ParamToUNum(tok.c_str()) & mWaitingForMask;
+			mWaitingForData = ParamToUNum(tok.c_str());
 
 			gotNextOutput = true;
 			break;
