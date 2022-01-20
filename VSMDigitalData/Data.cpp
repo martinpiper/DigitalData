@@ -393,7 +393,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			mCurrentLine = mCurrentLine.substr(6);
 			std::string tok = getNextTok(mCurrentLine);
 			mWaitingForTime = atof(tok.c_str());
-			if (mWaitingForTime >= time)
+			if (time >= mWaitingForTime)
 			{
 				mWaitingForTime = -1.0f;
 				continue;

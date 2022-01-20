@@ -253,6 +253,12 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 					return;
 				}
 				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+
+				if (data.waitingForInput())
+				{
+					return;
+				}
+
 				if (mActiveModel)
 				{
 					sprintf(mActiveModel->mDisplayFileAndLine, "Running: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());

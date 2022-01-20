@@ -218,25 +218,30 @@ int main()
 	value = data.getData();
 	assert(value == 0x4);
 	data.simulate(0, 0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x100);	// byte 0 but with address increment
+	data.simulate(0, 0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x321);
 
 	// w$ffffffff,$1234
 	data.simulate(0, 0, 0x00, 0x00);
 	assert(data.waitingForInput() == true);
 	value = data.getData();
-	assert(value == 0x200);
+	assert(value == 0x421);
 	data.simulate(0, 0, 0x00, 0x00);
 	assert(data.waitingForInput() == true);
 	value = data.getData();
-	assert(value == 0x200);
+	assert(value == 0x421);
 	data.simulate(0, 0x12, 0x00, 0x00);
 	assert(data.waitingForInput() == true);
 	value = data.getData();
-	assert(value == 0x200);
+	assert(value == 0x421);
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	assert(data.waitingForInput() == false);
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	value = data.getData();
-	assert(value == 0x301);
+	assert(value == 0x501);	// byte 1 but with address increment
 	data.simulate(0, 0x1234, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x0);

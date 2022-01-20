@@ -6,7 +6,7 @@ d01,d$123,	,d$456,	,d$321
 +8,9,10,11,+
 ++
 
-!Test2.txt
+!C:\Work\DigitalData\VSMDigitalDataTest\Test2.txt
 
 ^+$01
 d1
@@ -20,6 +20,7 @@ d4
 
 
 b0
+d$321
 ; Using <mask> wait for <data>
 w$ffffffff,$1234
 b1
