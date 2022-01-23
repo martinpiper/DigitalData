@@ -62,4 +62,6 @@ private:
 
 	std::list<BufferedTransitions> mQueuedEvents;
 	BufferedTransitions mLastAdded;
+	ABSTIME mLastHiClockTime;
+	unsigned int mRvalue;
 };

@@ -87,3 +87,7 @@
 
 * For: if (rvalue == 0)
 	Make this a configuration item to filter out null writes
+
+
+
+* When recording the sustained signal levels before the edge needs to be used

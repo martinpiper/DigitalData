@@ -15,6 +15,8 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	mLastAdded.mInputPositiveEdge = 0;
 	mLastAdded.mInputNegativeEdge = 0;
 	mPatternFP = 0;
+	mLastHiClockTime = 0;
+	mRvalue = 0;
 
 	mActiveModel = (ActiveModel*) (instance->getactivemodel());
 
@@ -172,79 +174,104 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 	Data& data = mData;
 
-	if (data.waitingForInput())
+	if (!mRecord)
 	{
-		// Stop any data trigger on the positive clock edge for a tick
-		mTryGetData = false;
-
-		// Retire as many queued events as we can while waiting
-		while (!mQueuedEvents.empty() && data.waitingForInput())
-		{
-			if (mActiveModel)
-			{
-				sprintf(mActiveModel->mDisplayFileAndLine, "Waiting queued: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
-			}
-
-			// Queued events, so retire them first
-			BufferedTransitions &firstOne = mQueuedEvents.front();
-			data.simulate(realtime(time), firstOne.mInput, firstOne.mInputPositiveEdge, firstOne.mInputNegativeEdge);
-			mQueuedEvents.pop_front();
-		}
 		if (data.waitingForInput())
 		{
-			if (mActiveModel)
+			// Stop any data trigger on the positive clock edge for a tick
+			mTryGetData = false;
+
+			int lastWaitPrint = 0;
+			// Retire as many queued events as we can while waiting
+			while (!mQueuedEvents.empty() && data.waitingForInput())
 			{
-				sprintf(mActiveModel->mDisplayFileAndLine, "Waiting: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+				if (mActiveModel)
+				{
+					lastWaitPrint = data.getWaitingForData();
+					sprintf(mActiveModel->mDisplayFileAndLine, "Waiting queued: $%08x: %d %s", lastWaitPrint, data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+				}
+
+				// Queued events, so retire them first
+				BufferedTransitions &firstOne = mQueuedEvents.front();
+				data.simulate(realtime(time), firstOne.mInput, firstOne.mInputPositiveEdge, firstOne.mInputNegativeEdge);
+				mQueuedEvents.pop_front();
+			}
+			if (data.waitingForInput())
+			{
+				if (mActiveModel)
+				{
+					lastWaitPrint = data.getWaitingForData();
+					sprintf(mActiveModel->mDisplayFileAndLine, "Waiting: $%08x: %d %s", lastWaitPrint, data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+				}
+
+				// No queued events, so handle the event now
+				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+			}
+			else
+			{
+				// And queue the current event
+				QueueOrCheck(potentialTransition);
 			}
 
-			// No queued events, so handle the event now
-			data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
-		}
-		else
-		{
-			// And queue the current event
-			QueueOrCheck(potentialTransition);
-		}
+			if (data.anyError())
+			{
+				mInstance->fatal((CHAR*)data.getError().c_str());
+			}
+			if (data.waitingForInput())
+			{
+				return;
+			}
 
-		if (data.anyError())
-		{
-			mInstance->fatal((CHAR*)data.getError().c_str());
-		}
-		if (data.waitingForInput())
-		{
+			if (mActiveModel)
+			{
+				sprintf(mActiveModel->mDisplayFileAndLine, "Completed wait: $%08x: %d %s", lastWaitPrint, data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+			}
 			return;
 		}
-
-		if (mActiveModel)
-		{
-			sprintf(mActiveModel->mDisplayFileAndLine, "Completed wait: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
-		}
-		return;
 	}
 
+	bool clockEdge = mPinCLOCK->isposedge();
+	bool clockIsLow = islow(mPinCLOCK->istate());
 
-	bool clockEdge = (bool)mPinCLOCK->isposedge();
+	// Get the sustained value just before the edge
+	if (mRecord && !clockEdge && clockIsLow)
+	{
+		int i;
+		mRvalue = 0;
+		for (i = 31; i >= 0; i--)
+		{
+			mRvalue <<= 1;
+			if (ishigh(mPinD[i]->istate()))
+			{
+				mRvalue |= 1;
+			}
+		}
+	}
+
+	if (!clockEdge && ishigh(mPinCLOCK->istate()))
+	{
+		mLastHiClockTime = time;
+	}
+
 	if (clockEdge)
 	{
 		if (mRecord)
 		{
 			REALTIME rtime = realtime(time);
 
-			int i;
-			unsigned int rvalue = 0;
-			for (i = 31; i >= 0; i--)
-			{
-				rvalue <<= 1;
-				if (ishigh(mPinD[i]->istate()))
-				{
-					rvalue |= 1;
-				}
-			}
-
-			if (mOutputIgnoreZeroWrites && rvalue == 0)
+			if (mOutputIgnoreZeroWrites && mRvalue == 0)
 			{
 				return;
 			}
+
+			bool willIgnoreWrite = false;
+			ABSTIME tickDelta = time - mLastHiClockTime;
+			// Too short from the last negative edge to positive edge, then ignore the write
+			if (mOutputIgnoreZeroWrites && (tickDelta <= dsimtime(0.0000001L)))
+			{
+//				willIgnoreWrite = true;
+			}
+
 			if (mOutputTime)
 			{
 				fprintf(mPatternFP, ";@time:%f\n", rtime);
@@ -261,11 +288,26 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				if (mOutputUsingWaitsValueLast != waitValue)
 				{
 					// Deliberately use the full value, without the mask, so we can use it to include extra debug info if needed
-					fprintf(mPatternFP, "w$%08x,$%08x\n", mOutputUsingWaitsValue, value);
+					if (willIgnoreWrite)
+					{
+						fprintf(mPatternFP, ";w$%08x,$%08x\n", mOutputUsingWaitsValue, value);
+					}
+					else
+					{
+						fprintf(mPatternFP, "w$%08x,$%08x\n", mOutputUsingWaitsValue, value);
+					}
 					mOutputUsingWaitsValueLast = waitValue;
 				}
 			}
-			fprintf(mPatternFP, "d$%08x\n", rvalue);
+			if (willIgnoreWrite)
+			{
+				fprintf(mPatternFP, ";ignored short write d$%08x\n", mRvalue);
+			}
+			else
+			{
+//				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalue , (int)tickDelta);
+				fprintf(mPatternFP, "d$%08x\n", mRvalue);
+			}
 
 			mLastTime = rtime;
 		}
