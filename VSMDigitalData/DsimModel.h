@@ -1,12 +1,23 @@
 #pragma once
 #include "StdAfx.h"
 #include <stdio.h>
+#include <list>
 #include "vsm.hpp"
 #include "ActiveModel.h"
 
 #define InfoLog(__s__) inst->log(__s__);
 
 #define DsimModel_DEBUG_FORMAT "time %20llu R%02x G%02x B%02x H%02x V%02x\n"
+
+struct BufferedTransitions
+{
+	unsigned int mInput, mInputPositiveEdge, mInputNegativeEdge;
+
+	bool operator==(const BufferedTransitions& rhs)
+	{
+		return (mInput = rhs.mInput) && (mInputPositiveEdge = rhs.mInputPositiveEdge) && (mInputNegativeEdge = rhs.mInputNegativeEdge);
+	}
+};
 
 class DsimModel : public IDSIMMODEL
 {
@@ -17,6 +28,7 @@ public:
 	VOID actuate (REALTIME time, ACTIVESTATE newstate);
 	BOOL indicate (REALTIME time, ACTIVEDATA *data);
 	VOID simulate (ABSTIME time, DSIMMODES mode);
+	void QueueOrCheck(BufferedTransitions &potentialTransition);
 	VOID callback (ABSTIME time, EVENTID eventid);
 private:
 	IINSTANCE *mInstance;
@@ -47,4 +59,7 @@ private:
 	int mNumWarnings;
 
 	bool mOutputIgnoreZeroWrites;
+
+	std::list<BufferedTransitions> mQueuedEvents;
+	BufferedTransitions mLastAdded;
 };

@@ -11,6 +11,9 @@ INT DsimModel::isdigital (CHAR *pinname)
 
 VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 {
+	mLastAdded.mInput = 0;
+	mLastAdded.mInputPositiveEdge = 0;
+	mLastAdded.mInputNegativeEdge = 0;
 	mPatternFP = 0;
 
 	mActiveModel = (ActiveModel*) (instance->getactivemodel());
@@ -162,6 +165,11 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 	}
 
+	BufferedTransitions potentialTransition;
+	potentialTransition.mInput = value;
+	potentialTransition.mInputPositiveEdge = valuePosEdge;
+	potentialTransition.mInputNegativeEdge = valueNegEdge;
+
 	Data& data = mData;
 
 	if (data.waitingForInput())
@@ -169,11 +177,35 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		// Stop any data trigger on the positive clock edge for a tick
 		mTryGetData = false;
 
-		if (mActiveModel)
+		// Retire as many queued events as we can while waiting
+		while (!mQueuedEvents.empty() && data.waitingForInput())
 		{
-			sprintf(mActiveModel->mDisplayFileAndLine, "Waiting: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+			if (mActiveModel)
+			{
+				sprintf(mActiveModel->mDisplayFileAndLine, "Waiting queued: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+			}
+
+			// Queued events, so retire them first
+			BufferedTransitions &firstOne = mQueuedEvents.front();
+			data.simulate(realtime(time), firstOne.mInput, firstOne.mInputPositiveEdge, firstOne.mInputNegativeEdge);
+			mQueuedEvents.pop_front();
 		}
-		data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+		if (data.waitingForInput())
+		{
+			if (mActiveModel)
+			{
+				sprintf(mActiveModel->mDisplayFileAndLine, "Waiting: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+			}
+
+			// No queued events, so handle the event now
+			data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+		}
+		else
+		{
+			// And queue the current event
+			QueueOrCheck(potentialTransition);
+		}
+
 		if (data.anyError())
 		{
 			mInstance->fatal((CHAR*)data.getError().c_str());
@@ -181,6 +213,11 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		if (data.waitingForInput())
 		{
 			return;
+		}
+
+		if (mActiveModel)
+		{
+			sprintf(mActiveModel->mDisplayFileAndLine, "Completed wait: $%08x: %d %s", data.getWaitingForData(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
 		}
 		return;
 	}
@@ -238,6 +275,8 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 				if (realtime(time) < mNotEarlierThan)
 				{
+					QueueOrCheck(potentialTransition);
+
 					if (mNumWarnings < 100)
 					{
 						// Avoid any early triggers before the rising edge for memory write has completed
@@ -248,20 +287,39 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 						{
 							mInstance->warning((CHAR *)"Too many warnings, others will be not be shown");
 						}
-
 					}
 					return;
 				}
-				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+
+				if (mQueuedEvents.empty())
+				{
+					// No queued events, so handle the event now
+					data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
+
+					if (mActiveModel)
+					{
+						sprintf(mActiveModel->mDisplayFileAndLine, "Running: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+					}
+				}
+				else
+				{
+					// And queue the current event
+					QueueOrCheck(potentialTransition);
+
+					// Queued events, so retire them first
+					BufferedTransitions &firstOne = mQueuedEvents.front();
+					data.simulate(realtime(time), firstOne.mInput, firstOne.mInputPositiveEdge, firstOne.mInputNegativeEdge);
+					mQueuedEvents.pop_front();
+
+					if (mActiveModel)
+					{
+						sprintf(mActiveModel->mDisplayFileAndLine, "Running queued: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+					}
+				}
 
 				if (data.waitingForInput())
 				{
 					return;
-				}
-
-				if (mActiveModel)
-				{
-					sprintf(mActiveModel->mDisplayFileAndLine, "Running: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
 				}
 
 				if (data.anyError())
@@ -335,6 +393,15 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			}
 			mTryGetData = true;
 		}
+	}
+}
+
+void DsimModel::QueueOrCheck(BufferedTransitions &potentialTransition)
+{
+	if (!(mLastAdded == potentialTransition))
+	{
+		mQueuedEvents.push_back(potentialTransition);
+		mLastAdded = potentialTransition;
 	}
 }
 

@@ -18,7 +18,7 @@ public:
 	void drawText(void);
 	void drawScreen(void);
 
-	CHAR mDisplayFileAndLine[256];
+	CHAR mDisplayFileAndLine[512];
 
 private:
 	ICOMPONENT *mComponent;
