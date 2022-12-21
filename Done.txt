@@ -91,3 +91,12 @@
 
 
 * When recording the sustained signal levels before the edge needs to be used
+
+
+
+
+* Add last file name, pointer position and file line indicators to the display output
+	Useful for debugging
+	* Also add waiting for what indicator
+	* And an error indicator?
+	* These can be added as simple text, like the digital display module

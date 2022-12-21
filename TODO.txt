@@ -7,18 +7,16 @@
 
 
 
-* Add last file name, pointer position and file line indicators to the display output
-	Useful for debugging
-	* Also add waiting for what indicator
-	* And an error indicator?
-	* These can be added as simple text, like the digital display module
-
-
-
-
 * At the moment inside DsimModel.cpp there is untested logic for "mTryGetData" and when to respond to a successful wait waitingForInput() by getting the next data value
 
 
 
 * Add defines, simple key value replacement
 	* #string value
+
+
+
+* Validate write timings when recording
+	Display warnings about what was not met in the debug log
+	Debug break?
+	
