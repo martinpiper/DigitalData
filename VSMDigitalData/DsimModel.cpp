@@ -173,6 +173,12 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	potentialTransition.mInputNegativeEdge = valueNegEdge;
 
 	Data& data = mData;
+	bool wasWaitFromQueue = false;
+
+//	if (data.getCurrentLineNumber() == 158244)
+//	{
+//		int a = 0;
+//	}
 
 	if (!mRecord)
 	{
@@ -207,11 +213,6 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				// No queued events, so handle the event now
 				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
 			}
-			else
-			{
-				// And queue the current event
-				QueueOrCheck(potentialTransition);
-			}
 
 			if (data.anyError())
 			{
@@ -226,7 +227,9 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 				sprintf(mActiveModel->mDisplayFileAndLine, "Completed wait: $%08x: %d %s", lastWaitPrint, data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
 			}
-			return;
+
+			wasWaitFromQueue = true;
+			mTryGetData = true;
 		}
 	}
 
@@ -253,7 +256,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		mLastHiClockTime = time;
 	}
 
-	if (clockEdge)
+	if (wasWaitFromQueue || clockEdge)
 	{
 		if (mRecord)
 		{
@@ -436,11 +439,15 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			mTryGetData = true;
 		}
 	}
+	else
+	{
+		QueueOrCheck(potentialTransition);
+	}
 }
 
 void DsimModel::QueueOrCheck(BufferedTransitions &potentialTransition)
 {
-	if (!(mLastAdded == potentialTransition))
+	if (!mRecord && !(mLastAdded == potentialTransition))
 	{
 		mQueuedEvents.push_back(potentialTransition);
 		mLastAdded = potentialTransition;

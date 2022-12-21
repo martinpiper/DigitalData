@@ -100,3 +100,8 @@
 	* Also add waiting for what indicator
 	* And an error indicator?
 	* These can be added as simple text, like the digital display module
+
+
+
+* Improved accuracy of the HV wait timing, subsequent writes that are too soon will be delayed until the next clock.
+	This makes it more like the APU.
