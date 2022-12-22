@@ -59,6 +59,7 @@ private:
 	int mNumWarnings;
 
 	bool mOutputIgnoreZeroWrites;
+	bool mTriggerLeadsToWrite;
 
 	std::list<BufferedTransitions> mQueuedEvents;
 	BufferedTransitions mLastAdded;

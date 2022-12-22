@@ -72,6 +72,15 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		mOutputIgnoreZeroWrites = atoi(t) ? true : false;
 	}
 
+	t = mInstance->getstrval((CHAR*)"TRIGGERLEADSTOWRITE");
+	mTriggerLeadsToWrite = false;
+	if (t != 0)
+	{
+		mTriggerLeadsToWrite = atoi(t) ? true : false;
+	}
+
+	// Setup pins
+
 	int i;
 	for (i = 0; i < 32; i++)
 	{
@@ -213,6 +222,14 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				// No queued events, so handle the event now
 				data.simulate(realtime(time), value, valuePosEdge, valueNegEdge);
 			}
+			else
+			{
+				if (!mTriggerLeadsToWrite)
+				{
+					// And queue the current event
+					QueueOrCheck(potentialTransition);
+				}
+			}
 
 			if (data.anyError())
 			{
@@ -226,6 +243,11 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			if (mActiveModel)
 			{
 				sprintf(mActiveModel->mDisplayFileAndLine, "Completed wait: $%08x: %d %s", lastWaitPrint, data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+			}
+
+			if (!mTriggerLeadsToWrite)
+			{
+				return;
 			}
 
 			wasWaitFromQueue = true;

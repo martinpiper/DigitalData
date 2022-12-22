@@ -105,3 +105,8 @@
 
 * Improved accuracy of the HV wait timing, subsequent writes that are too soon will be delayed until the next clock.
 	This makes it more like the APU.
+
+
+
+
+* Add option for trigger then clock
