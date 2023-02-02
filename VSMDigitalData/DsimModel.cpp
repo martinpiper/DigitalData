@@ -88,6 +88,11 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		sprintf(temp, "D%d", i);
 		mPinD[i] = mInstance->getdsimpin(temp, true);
 
+		if (!mRecord)
+		{
+			mPinD[i]->setstate(0, 0, SLO);
+		}
+
 		sprintf(temp, "ID%d", i);
 		mPinID[i] = mInstance->getdsimpin(temp, true);
 	}
