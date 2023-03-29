@@ -110,3 +110,19 @@
 
 
 * Add option for trigger then clock
+
+
+
+
+* Validate write timings when recording
+	Display warnings about what was not met in the debug log
+	Debug break?
+		Output a signal that indicates a write failure, which can be used as a logic analyser input or breakpoint
+	While low, check for address being stable
+	Check for address and data being stable pre neagtive and post positive edge
+	>> Added:
+		MWCHECKADDRESSHELDONLOW
+		MWCHECKDATAHELDONLOW
+		MWADDRESSHELDTIMEBEFORENEGEDGE
+		MWADDRESSDATAHELDTIMEAFTERPOSEDGE
+		MWADDRESSDATAHELDTIMEBEFOREPOSEDGE

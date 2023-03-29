@@ -16,7 +16,7 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	mLastAdded.mInputNegativeEdge = 0;
 	mPatternFP = 0;
 	mLastHiClockTime = 0;
-	mRvalue = 0;
+	mRvalueWhenLow = 0;
 
 	mActiveModel = (ActiveModel*) (instance->getactivemodel());
 
@@ -79,6 +79,21 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		mTriggerLeadsToWrite = atoi(t) ? true : false;
 	}
 
+	mMWCheckAddressHeldOnLow = false;
+	t = mInstance->getstrval((CHAR*)"MWCHECKADDRESSHELDONLOW");
+	if (t != 0)
+	{
+		mMWCheckAddressHeldOnLow = atoi(t) ? true : false;
+	}
+
+	mMWCheckDataHeldOnLow = false;
+	t = mInstance->getstrval((CHAR*)"MWCHECKDATAHELDONLOW");
+	if (t != 0)
+	{
+		mMWCheckDataHeldOnLow = atoi(t) ? true : false;
+	}
+
+
 	// Setup pins
 
 	int i;
@@ -99,6 +114,11 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 
 	mPinMEMWRITE = mInstance->getdsimpin((CHAR*)"_MEMWRITE", true);
 	mPinCLOCK = mInstance->getdsimpin((CHAR*)"CLOCK", true);
+	mPinMWFail = mInstance->getdsimpin((CHAR*)"MWFAIL", true);
+	if (mPinMWFail != 0)
+	{
+		mPinMWFail->setstate(0, 0, SLO);
+	}
 
 	if (mDoStart)
 	{
@@ -260,36 +280,114 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 	}
 
-	bool clockEdge = mPinCLOCK->isposedge();
+	bool isClockEdgePos = mPinCLOCK->isposedge();
+	bool isClockEdgeNeg = mPinCLOCK->isnegedge();
 	bool clockIsLow = islow(mPinCLOCK->istate());
 
-	// Get the sustained value just before the edge
-	if (mRecord && !clockEdge && clockIsLow)
+	// Get the sustained value just before the edges
+	if (mRecord && isClockEdgePos)
 	{
 		int i;
-		mRvalue = 0;
+		mRvalueOnPosEdge = 0;
 		for (i = 31; i >= 0; i--)
 		{
-			mRvalue <<= 1;
+			mRvalueOnPosEdge <<= 1;
 			if (ishigh(mPinD[i]->istate()))
 			{
-				mRvalue |= 1;
+				mRvalueOnPosEdge |= 1;
 			}
 		}
 	}
+	if (mRecord && isClockEdgeNeg)
+	{
+		int i;
+		mRvalueOnNegEdge = 0;
+		for (i = 31; i >= 0; i--)
+		{
+			mRvalueOnNegEdge <<= 1;
+			if (ishigh(mPinD[i]->istate()))
+			{
+				mRvalueOnNegEdge |= 1;
+			}
+		}
+		// Setup for any held value test
+		mRvalueWhenLow = mRvalueOnNegEdge;
+		mLastTimeNegEdge = time;
+	}
 
-	if (!clockEdge && ishigh(mPinCLOCK->istate()))
+	// Get held last value on clock low before any edges
+	if (mRecord && !isClockEdgeNeg && !isClockEdgePos && clockIsLow)
+	{
+		int i;
+		int newHeldValue = 0;
+		for (i = 31; i >= 0; i--)
+		{
+			newHeldValue <<= 1;
+			if (ishigh(mPinD[i]->istate()))
+			{
+				newHeldValue |= 1;
+			}
+		}
+
+		// For now assume the address is D[8..31]
+		// and assume data is D[0..7]
+		bool gotErrorThisTime = false;
+		if (mMWCheckAddressHeldOnLow)
+		{
+			if ( (newHeldValue & 0xffffff00) != (mRvalueWhenLow & 0xffffff00))
+			{
+				if (mPinMWFail != 0)
+				{
+					mPinMWFail->setstate(time, 0, SHI);
+				}
+				gotErrorThisTime = true;
+
+				REALTIME rtime = realtime(time);
+				fprintf(mPatternFP, ";Address not held @time:%f:$%08x on neg $%08x @ntime:%f\n", rtime, newHeldValue , mRvalueOnNegEdge , realtime(mLastTimeNegEdge));
+			}
+		}
+		if (mMWCheckDataHeldOnLow)
+		{
+			if ((newHeldValue & 0xff) != (mRvalueWhenLow & 0xff))
+			{
+				if (!gotErrorThisTime)
+				{
+					if (mPinMWFail != 0)
+					{
+						mPinMWFail->setstate(time, 0, SHI);
+					}
+				}
+				gotErrorThisTime = true;
+
+				REALTIME rtime = realtime(time);
+				fprintf(mPatternFP, ";Data not held @time:%f:$%08x on neg $%08x @ntime:%f\n", rtime , newHeldValue, mRvalueOnNegEdge, realtime(mLastTimeNegEdge));
+			}
+		}
+		if (gotErrorThisTime)
+		{
+			// And then indicate a reset for the failure signal
+			if (mPinMWFail != 0)
+			{
+//				mPinMWFail->setstate(time, 1000, SLO);	// I hate the way the relative time doesn't seem to work!!!
+				mPinMWFail->setstate(dsimtime(realtime(time) + 0.0000001f) , 0 , SLO);
+			}
+		}
+
+		mRvalueWhenLow = newHeldValue;
+	}
+
+	if (!isClockEdgePos && ishigh(mPinCLOCK->istate()))
 	{
 		mLastHiClockTime = time;
 	}
 
-	if (wasWaitFromQueue || clockEdge)
+	if (wasWaitFromQueue || isClockEdgePos)
 	{
 		if (mRecord)
 		{
 			REALTIME rtime = realtime(time);
 
-			if (mOutputIgnoreZeroWrites && mRvalue == 0)
+			if (mOutputIgnoreZeroWrites && mRvalueWhenLow == 0)
 			{
 				return;
 			}
@@ -331,12 +429,12 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			}
 			if (willIgnoreWrite)
 			{
-				fprintf(mPatternFP, ";ignored short write d$%08x\n", mRvalue);
+				fprintf(mPatternFP, ";ignored short write d$%08x\n", mRvalueWhenLow);
 			}
 			else
 			{
-//				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalue , (int)tickDelta);
-				fprintf(mPatternFP, "d$%08x\n", mRvalue);
+//				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalueWhenLow , (int)tickDelta);
+				fprintf(mPatternFP, "d$%08x\n", mRvalueWhenLow);
 			}
 
 			mLastTime = rtime;

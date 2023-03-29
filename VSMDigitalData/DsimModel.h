@@ -35,7 +35,7 @@ private:
 	IDSIMCKT *mDigitalComponent;
 	IDSIMPIN *mPinD[32];
 	IDSIMPIN *mPinID[32];
-	IDSIMPIN *mPinMEMWRITE , *mPinCLOCK;
+	IDSIMPIN *mPinMEMWRITE , *mPinCLOCK , *mPinMWFail;
 
 	FILE *mPatternFP;
 
@@ -64,5 +64,9 @@ private:
 	std::list<BufferedTransitions> mQueuedEvents;
 	BufferedTransitions mLastAdded;
 	ABSTIME mLastHiClockTime;
-	unsigned int mRvalue;
+	unsigned int mRvalueOnNegEdge , mRvalueOnPosEdge;
+	ABSTIME mLastTimeNegEdge = 0;
+	unsigned int mRvalueWhenLow;
+	bool mMWCheckAddressHeldOnLow = false;
+	bool mMWCheckDataHeldOnLow = false;
 };

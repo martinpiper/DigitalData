@@ -16,7 +16,3 @@
 
 
 
-* Validate write timings when recording
-	Display warnings about what was not met in the debug log
-	Debug break?
-	
