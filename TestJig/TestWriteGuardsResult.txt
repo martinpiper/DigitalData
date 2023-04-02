@@ -1,0 +1,30 @@
+;Address not stable before pos edge @petime:0.050000:$00000000 with last change time @actime:0.000000
+;Data not stable before pos edge @petime:0.050000:$00000000 with last change time @dctime:0.000000
+;@time:0.050000
+;delta:0.050000
+d$00000000
+;@time:0.650000
+;delta:0.600000
+d$00000000
+;@time:1.650000
+;delta:1.000000
+d$00ff0077
+;Address not held @time:2.450000:$00220033 on neg $00ff0077 @ntime:2.350000
+;Data not held @time:2.450000:$00220033 on neg $00ff0077 @ntime:2.350000
+;@time:2.650000
+;delta:1.000000
+d$00220033
+;Address not stable before neg edge @netime:3.450000:$00ff0077 with last change time @actime:3.450000
+;@time:3.650000
+;delta:1.000000
+d$00ff0077
+;Data not held @time:4.550000:$00ff0077 on neg $00ff0000 @ntime:4.350000
+;Data not stable before pos edge @petime:4.650000:$00ff0077 with last change time @dctime:4.550000
+;@time:4.650000
+;delta:1.000000
+d$00ff0077
+;@time:5.650000
+;delta:1.000000
+d$00ff0077
+;Address not stable after pos edge @petime:5.650000:$00220033 with last change time @actime:5.750000
+;Data not stable after pos edge @petime:5.650000:$00220033 with last change time @dctime:5.750000

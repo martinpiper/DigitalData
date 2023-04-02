@@ -65,8 +65,17 @@ private:
 	BufferedTransitions mLastAdded;
 	ABSTIME mLastHiClockTime;
 	unsigned int mRvalueOnNegEdge , mRvalueOnPosEdge;
+	unsigned int mRecordMaskAddress = 0xffffff00;
+	unsigned int mRecordMaskData = 0x000000ff;
 	ABSTIME mLastTimeNegEdge = 0;
+	ABSTIME mLastTimePosEdge = 0;
+	ABSTIME mLastTimePosEdgeReportTime = 0;
 	unsigned int mRvalueWhenLow;
+	unsigned int mRvalueAddress , mRvalueData;
+	ABSTIME mRvalueAddressLastChangeTime , mRvalueDataLastChangeTime;
 	bool mMWCheckAddressHeldOnLow = false;
 	bool mMWCheckDataHeldOnLow = false;
+	double mMWCheckAddressHeldTimeBeforeNegEdge = 0.0f;
+	double mMWCheckAddressDataHeldTimeBeforePosEdge = 0.0f;
+	double mMWCheckAddressDataHeldTimeAfterPosEdge = 0.0f;
 };

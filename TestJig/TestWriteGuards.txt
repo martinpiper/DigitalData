@@ -1,0 +1,87 @@
+; bit 28  = _MW
+; byte 2 (bits 23-16) address
+; byte 0 (bits 7-0) data
+; Clock is at 10Hz, so 10 data entries per write
+
+; No address or data change during write.
+d$10000000
+d$10000000
+d$10000000
+d$00000000
+d$00000000
+
+d$00000000
+d$10000000
+d$10000000
+d$10000000
+d$10000000
+
+
+; No address or data change during write. Address and data setup time OK.
+d$10ff0077
+d$10ff0077
+d$10ff0077
+d$00ff0077
+d$00ff0077
+
+d$00ff0077
+d$10ff0077
+d$10ff0077
+d$10ff0077
+d$10ff0077
+
+
+; Address and data change during write.
+d$10ff0077
+d$10ff0077
+d$10ff0077
+d$00ff0077
+d$00220033
+
+d$00220033
+d$10220033
+d$10220033
+d$10220033
+d$10220033
+
+
+; Address setup time not valid. Address and data change is coincident with negative edge _MW.
+d$10000000
+d$10000000
+d$10000000
+d$10000000
+d$00ff0077
+
+d$00ff0077
+d$10ff0077
+d$10ff0077
+d$10ff0077
+d$10ff0077
+
+
+; No address change during write. Data change is not held long enough before positive edge _MW.
+d$10ff0000
+d$10ff0000
+d$10ff0000
+d$00ff0000
+d$00ff0000
+
+d$00ff0077
+d$10ff0077
+d$10ff0077
+d$10ff0077
+d$10ff0077
+
+
+; No address or data change during write. Data is not held long enough after positive edge
+d$10ff0077
+d$10ff0077
+d$10ff0077
+d$00ff0077
+d$00ff0077
+
+d$00ff0077
+d$10ff0077
+d$10220033
+d$10220033
+d$10220033
