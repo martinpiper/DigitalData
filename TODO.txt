@@ -14,7 +14,3 @@
 * Add defines, simple key value replacement
 	* #string value
 
-
-
-
-* Test the write held times using specific input timing data
