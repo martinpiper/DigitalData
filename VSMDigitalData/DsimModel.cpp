@@ -299,56 +299,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	bool clockIsLow = islow(mPinCLOCK->istate());
 	bool gotErrorThisTime = false;
 
-	// Update any held data timings for any detected change to address or data
-	if (mRecord)
-	{
-		int i;
-		int newValue = 0;
-		for (i = 31; i >= 0; i--)
-		{
-			newValue <<= 1;
-			if (ishigh(mPinD[i]->istate()))
-			{
-				newValue |= 1;
-			}
-		}
-
-		if (mRvalueAddress != (newValue & mRecordMaskAddress))
-		{
-			mRvalueAddress = (newValue & mRecordMaskAddress);
-			mRvalueAddressLastChangeTime = time;
-			mLastTimePosEdgeReportTime = 0;	// Reset the time on any change
-		}
-		if (mRvalueData != (newValue & mRecordMaskData))
-		{
-			mRvalueData = (newValue & mRecordMaskData);
-			mRvalueDataLastChangeTime = time;
-			mLastTimePosEdgeReportTime = 0;	// Reset the time on any change
-		}
-
-		if (mLastTimeNegEdge > 0 && mLastTimePosEdge > 0 && mMWCheckAddressDataHeldTimeAfterPosEdge > 0.0f)
-		{
-			if (mLastTimePosEdgeReportTime == 0)
-			{
-				mLastTimePosEdgeReportTime = time;
-				double delta = realtime(mRvalueAddressLastChangeTime - mLastTimePosEdge);
-				if (delta >= 0.0f && delta < mMWCheckAddressDataHeldTimeAfterPosEdge)
-				{
-					gotErrorThisTime = true;
-					fprintf(mPatternFP, ";Address not stable after pos edge @petime:%f:$%08x with last change time @actime:%f\n", realtime(mLastTimePosEdge), newValue, realtime(mRvalueAddressLastChangeTime));
-				}
-				delta = realtime(mRvalueDataLastChangeTime - mLastTimePosEdge);
-				if (delta >= 0.0f && delta < mMWCheckAddressDataHeldTimeAfterPosEdge)
-				{
-					gotErrorThisTime = true;
-					fprintf(mPatternFP, ";Data not stable after pos edge @petime:%f:$%08x with last change time @dctime:%f\n", realtime(mLastTimePosEdge), newValue, realtime(mRvalueDataLastChangeTime));
-				}
-			}
-		}
-
-	}
-
-	// Get the sustained value just before the edges
+	// Get the value on the positive edge
 	if (mRecord && isClockEdgePos)
 	{
 		int i;
@@ -364,23 +315,27 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 		if (mMWCheckAddressDataHeldTimeBeforePosEdge > 0.0f)
 		{
-			double delta = realtime(time - mRvalueAddressLastChangeTime);
-			if (delta < mMWCheckAddressDataHeldTimeBeforePosEdge)
+			// Coincident events are allowed
+			ABSTIME atime = time - mRvalueAddressLastChangeTime;
+			double delta = realtime(atime);
+			if (delta > 0.0f && delta < mMWCheckAddressDataHeldTimeBeforePosEdge)
 			{
 				gotErrorThisTime = true;
-				fprintf(mPatternFP, ";Address not stable before pos edge @petime:%f:$%08x with last change time @actime:%f\n", realtime(time), mRvalueOnPosEdge, realtime(mRvalueAddressLastChangeTime));
+				fprintf(mPatternFP, ";Address not stable before pos edge @petime:%f:$%08x with last change time @actime:%f atime %d\n", realtime(time), mRvalueOnPosEdge, realtime(mRvalueAddressLastChangeTime), (int)atime);
 			}
-			delta = realtime(time - mRvalueDataLastChangeTime);
-			if (delta < mMWCheckAddressDataHeldTimeBeforePosEdge)
+			atime = time - mRvalueDataLastChangeTime;
+			delta = realtime(atime);
+			if (delta > 0.0f && delta < mMWCheckAddressDataHeldTimeBeforePosEdge)
 			{
 				gotErrorThisTime = true;
-				fprintf(mPatternFP, ";Data not stable before pos edge @petime:%f:$%08x with last change time @dctime:%f\n", realtime(time), mRvalueOnPosEdge, realtime(mRvalueDataLastChangeTime));
+				fprintf(mPatternFP, ";Data not stable before pos edge @petime:%f:$%08x with last change time @dctime:%f atime %d\n", realtime(time), mRvalueOnPosEdge, realtime(mRvalueDataLastChangeTime), (int)atime);
 			}
 		}
 
 		mLastTimePosEdge = time;
 	}
 
+	// Get the value on the negative edge
 	if (mRecord && isClockEdgeNeg)
 	{
 		int i;
@@ -409,11 +364,68 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 	}
 
+	// Update any held data timings for any detected change to address or data
+	// Must be done after any clock edge detection triggers
+	if (mRecord)
+	{
+		int i;
+		unsigned int newValue = 0;
+		unsigned int undefined = 0;
+		for (i = 31; i >= 0; i--)
+		{
+			newValue <<= 1;
+			if (ishigh(mPinD[i]->istate()))
+			{
+				newValue |= 1;
+			}
+			undefined <<= 1;
+			if (iscontention(mPinD[i]->istate()))
+			{
+				undefined |= 1;
+			}
+		}
+
+		if (mRvalueAddress != (newValue & mRecordMaskAddress))
+		{
+			mRvalueAddress = (newValue & mRecordMaskAddress);
+			mRvalueAddressLastChangeTime = time;
+			mLastTimePosEdgeReportTime = 0;	// Reset the time on any change
+		}
+		if (mRvalueData != (newValue & mRecordMaskData))
+		{
+//			fprintf(mPatternFP, ";Data changed @time:%f atime %d old %08x new %08x udef %08x\n", realtime(time), (int)time, mRvalueData, (newValue & mRecordMaskData), (int)undefined);
+
+			mRvalueData = (newValue & mRecordMaskData);
+			mRvalueDataLastChangeTime = time;
+			mLastTimePosEdgeReportTime = 0;	// Reset the time on any change
+		}
+
+		if (mLastTimeNegEdge > 0 && mLastTimePosEdge > 0 && mMWCheckAddressDataHeldTimeAfterPosEdge > 0.0f)
+		{
+			if (mLastTimePosEdgeReportTime == 0)
+			{
+				mLastTimePosEdgeReportTime = time;
+				double delta = realtime(mRvalueAddressLastChangeTime - mLastTimePosEdge);
+				if (delta >= 0.0f && delta < mMWCheckAddressDataHeldTimeAfterPosEdge)
+				{
+					gotErrorThisTime = true;
+					fprintf(mPatternFP, ";Address not stable after pos edge @petime:%f:$%08x with last change time @actime:%f\n", realtime(mLastTimePosEdge), newValue, realtime(mRvalueAddressLastChangeTime));
+				}
+				delta = realtime(mRvalueDataLastChangeTime - mLastTimePosEdge);
+				if (delta >= 0.0f && delta < mMWCheckAddressDataHeldTimeAfterPosEdge)
+				{
+					gotErrorThisTime = true;
+					fprintf(mPatternFP, ";Data not stable after pos edge @petime:%f:$%08x with last change time @dctime:%f\n", realtime(mLastTimePosEdge), newValue, realtime(mRvalueDataLastChangeTime));
+				}
+			}
+		}
+	}
+
 	// Get held last value on clock low before any edges
 	if (mRecord && !isClockEdgeNeg && !isClockEdgePos && clockIsLow)
 	{
 		int i;
-		int newHeldValue = 0;
+		unsigned int newHeldValue = 0;
 		for (i = 31; i >= 0; i--)
 		{
 			newHeldValue <<= 1;
@@ -509,12 +521,12 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			}
 			if (willIgnoreWrite)
 			{
-				fprintf(mPatternFP, ";ignored short write d$%08x\n", mRvalueWhenLow);
+				fprintf(mPatternFP, ";ignored short write d$%08x\n", mRvalueOnPosEdge);
 			}
 			else
 			{
-//				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalueWhenLow , (int)tickDelta);
-				fprintf(mPatternFP, "d$%08x\n", mRvalueWhenLow);
+//				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalueOnPosEdge , (int)tickDelta);
+				fprintf(mPatternFP, "d$%08x\n", mRvalueOnPosEdge);
 			}
 
 			mLastTime = rtime;
