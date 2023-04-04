@@ -14,3 +14,24 @@
 * Add defines, simple key value replacement
 	* #string value
 
+
+
+
+* Create an application that renders a digital logic analyser that listens on a specific network port for data.
+	Then the digital data model in record mode can optionally send to this specific network port.
+	This would allow multiple instances of the logic analyser to run and not be part of the main Proteus process (if Proteus crashes the capture windows are still open, which is useful)
+	Also any breakpoints hit in Proteus will not stop the logic analyser window from working.
+	Each instance can have an optional config file that remembers the input signal groups, names, colours etc
+	Capture on pattern...
+	Clear display when a new run is starting, or append to current display, clear display button
+	With up to 32 signals for each window, this would be a minimum of 8 bytes for the time, plus 4 bytes for all signals, for each coincident update.
+
+
+
+
+* RELTIME IINSTANCE::getdelay and getboolval might be more useful for values like TOLOW THENTOHI etc
+	However these would need to be strings, not floats. e.g. {CLOCKRATE="Clock Rate",STRING}
+	> Check the existing values like 0.0001 are automaically converted to the correct delay
+	> Also it would probably be better to keep the delays as RELTIME or ABSTIME for more accurate usage with setstate()
+	For mInstance->
+

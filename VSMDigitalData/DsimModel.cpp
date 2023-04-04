@@ -463,7 +463,6 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		if (mPinMWFail != 0)
 		{
 			mPinMWFail->setstate(time, 0, SHI);
-			//				mPinMWFail->setstate(time, 1000, SLO);	// I hate the way the relative time doesn't seem to work!!!
 			mPinMWFail->setstate(dsimtime(realtime(time) + 0.0000001f), 0, SLO);
 		}
 	}
