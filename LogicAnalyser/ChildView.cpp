@@ -86,12 +86,14 @@ BOOL CChildView::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwS
 void CChildView::OnZoomin()
 {
 	mZoomLevel /= 2.0f;
+	UpdateScrollbars();
 }
 
 
 void CChildView::OnZoomout()
 {
 	mZoomLevel *= 2.0f;
+	UpdateScrollbars();
 }
 
 
@@ -112,6 +114,10 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 	CWnd::OnTimer(nIDEvent);
 
 	mMaxTime += 1.0f;
+	UpdateScrollbars();
+}
 
-	mScroller.SetDisplaySize((int)(100.0f * mMaxTime * mZoomLevel), 0);
+void CChildView::UpdateScrollbars(void)
+{
+	mScroller.SetDisplaySize((int)(100.0f * mMaxTime * mZoomLevel), 512);
 }

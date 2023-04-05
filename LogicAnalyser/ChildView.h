@@ -49,5 +49,8 @@ public:
 
 	double mMaxTime = 0.0f;
 	double mZoomLevel = 1.0f;
+
+private:
+	void UpdateScrollbars(void);
 };
 
