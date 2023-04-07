@@ -29,8 +29,12 @@
 	* Command line option to limit the number of captures
 		> Captures are stored in a round robin list making it easy and fast to search
 		> When searching to find the current scroll start time, a binary search from the last position can be used
+		>> -n 1000000
+			The maximum number of entries to store
+		>> -f 50.0
+			How much buffer to keep before the first trigger.
 	* Command line options to customise the display of the 32 signals
-		> Zoom, the initial time period (in seconds by default) displayed in the width of the window: -z <time as a floatng point value>
+		> Zoom, the initial time period (in seconds by default) displayed in the width of the window: -z <time as a floating point value>
 		> Apply names for each group
 		> Binary/Hex/Decimal display
 		> Group: -g <"Name here"> <b/d/h> <./! separated list of signal numbers in decimal>

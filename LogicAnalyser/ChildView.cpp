@@ -16,6 +16,56 @@
 
 CChildView::CChildView()
 {
+	// Since all of the logic is in this view, we parse the command line arguments here
+	LPCWSTR commandLine = GetCommandLineW();
+	int argc = 0;
+	LPWSTR *argv = CommandLineToArgvW(commandLine, &argc);
+
+	for (int i = 1 ; i < argc ; i++)
+	{
+		CStringA theArg(argv[i]);
+		if (theArg.GetAt(0) == '-')
+		{
+			switch (theArg.GetAt(1))
+			{
+			case 'f':
+				i++;
+				if (i < argc)
+				{
+					CStringA theParam(argv[i]);
+					mFillPercent = atof(theParam);
+					continue;
+				}
+				break;
+			case 'n':
+				i++;
+				if (i < argc)
+				{
+					CStringA theParam(argv[i]);
+					mNumEntries = atoi(theParam);
+					continue;
+				}
+				break;
+			case 'z':
+				i++;
+				if (i < argc)
+				{
+					CStringA theParam(argv[i]);
+					mZoomLevel = dsimtime(atof(theParam));
+					continue;
+				}
+				break;
+			default:
+				break;
+			}
+
+		}
+	}
+
+	// Init the rest of the data
+	mCaptureData = new CaptureData[mNumEntries];
+	mFillNumEntries = (int) (mNumEntries * mFillPercent);
+	mAfterTriggerRemainingNumEntries = mNumEntries - mFillNumEntries;
 }
 
 CChildView::~CChildView()
@@ -57,6 +107,55 @@ void CChildView::OnPaint()
 	GetClientRect(&rect);
 
 	dc.FillSolidRect(0, 0, rect.right, rect.bottom, RGB(0, 0, 0));
+
+	CSize scrollPos = mScroller.GetScrollPos();
+	CSize scrollSize = mScroller.GetPageSize();
+	double viewRatioFromLeft = double(scrollPos.cx) / double(scrollSize.cx);
+
+	ABSTIME viewTimeStart = 0;
+	if (scrollSize.cx > 0)
+	{
+		viewTimeStart = (mZoomLevel * scrollPos.cx) / (scrollSize.cx * kSubDivisions);
+	}
+	viewTimeStart += mBufferTimeMin;
+	ABSTIME viewTimeEnd = mBufferTimeMax;
+
+	int actualIndex = 0;
+	if (mCaptureLooped)
+	{
+		actualIndex = mCaptureIndex;
+	}
+
+	int ypos = 0;
+	// TODO: Better search instead of linear
+	for (int i = 0 ; i < mNumCapturedCapped ; i++)
+	{
+		CaptureData &data = mCaptureData[actualIndex];
+
+		ypos += 16;
+		actualIndex++;
+		if (actualIndex >= mNumEntries)
+		{
+			actualIndex = 0;
+		}
+
+		if (data.mTime >= viewTimeEnd)
+		{
+			break;
+		}
+
+		ABSTIME deltaTime = data.mTime - viewTimeStart;
+		if (deltaTime < 0)
+		{
+			continue;
+		}
+
+		int pixelPosition = (int)((rect.right * deltaTime) / mZoomLevel);
+		dc.SetTextColor(RGB(255, 255, 255));
+		CString text;
+		text.Format(L"Hello %08x" , data.mData);
+		dc.TextOut(pixelPosition , ypos, text);
+	}
 }
 
 
@@ -65,6 +164,7 @@ void CChildView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	mScroller.OnHScroll(nSBCode, nPos, pScrollBar);
 //	CWnd::OnHScroll(nSBCode, nPos, pScrollBar);
+	RedrawWindow();
 }
 
 
@@ -85,15 +185,17 @@ BOOL CChildView::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwS
 
 void CChildView::OnZoomin()
 {
-	mZoomLevel /= 2.0f;
+	mZoomLevel /= 2;
 	UpdateScrollbars();
+	RedrawWindow();
 }
 
 
 void CChildView::OnZoomout()
 {
-	mZoomLevel *= 2.0f;
+	mZoomLevel *= 2;
 	UpdateScrollbars();
+	RedrawWindow();
 }
 
 
@@ -113,11 +215,72 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 
 	CWnd::OnTimer(nIDEvent);
 
-	mMaxTime += 1.0f;
-	UpdateScrollbars();
+	static ABSTIME faketime = 0;
+	static unsigned int data = 0;
+
+	CaptureData fakeCapture;
+	fakeCapture.mTime = faketime;
+	fakeCapture.mData = data;
+
+	bool needRefresh = AddCaptureDataEvent(fakeCapture);
+
+	if (needRefresh)
+	{
+		UpdateScrollbars();
+		RedrawWindow();
+	}
+
+	faketime += dsimtime(1.0f);
+	data += 1;
+	data = data | (data << 8) | (data << 16) | (data << 24);
 }
 
 void CChildView::UpdateScrollbars(void)
 {
-	mScroller.SetDisplaySize((int)(100.0f * mMaxTime * mZoomLevel), 512);
+	CRect rect;
+	GetClientRect(&rect);
+	mScroller.SetDisplaySize((int)(((double)(kSubDivisions * rect.right)) * (realtime(mBufferTime)/ realtime(mZoomLevel))), 512);
+}
+
+// Return: true indicates a visual refresh is needed
+bool CChildView::AddCaptureDataEvent(CaptureData &data)
+{
+	// Decide if we want to store the capture data after trigger
+	if (mTriggered && mCaptureLooped && mAfterTriggerRemainingNumEntries <= 0)
+	{
+		return false;
+	}
+	// First entry sets the min time
+	if (!mCaptureLooped && mCaptureIndex == 0)
+	{
+		mBufferTimeMin = data.mTime;
+	}
+
+	CaptureData justRetired;
+	if (mCaptureLooped)
+	{
+		justRetired = mCaptureData[mCaptureIndex];
+		mBufferTimeMin = justRetired.mTime;
+	}
+	mCaptureData[mCaptureIndex] = data;
+	mCaptureIndex++;
+	if (!mCaptureLooped)
+	{
+		mNumCapturedCapped++;
+	}
+	if (mCaptureIndex >= mNumEntries)
+	{
+		mCaptureIndex = 0;
+		mCaptureLooped = true;
+	}
+
+	mBufferTimeMax = data.mTime;
+	mBufferTime = mBufferTimeMax - mBufferTimeMin;
+
+	if (mTriggered && mCaptureLooped && (mAfterTriggerRemainingNumEntries > 0))
+	{
+		mAfterTriggerRemainingNumEntries--;
+	}
+
+	return true;
 }
