@@ -328,7 +328,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			if (delta > 0.0f && delta < mMWCheckAddressDataHeldTimeBeforePosEdge)
 			{
 				gotErrorThisTime = true;
-				fprintf(mPatternFP, ";Data not stable before pos edge @petime:%f:$%08x with last change time @dctime:%f atime %d\n", realtime(time), mRvalueOnPosEdge, realtime(mRvalueDataLastChangeTime), (int)atime);
+				fprintf(mPatternFP, ";Data not stable before pos edge @petime:%f:$%08x with last change time @dctime:%f atime %d delta_ns:%f\n", realtime(time), mRvalueOnPosEdge, realtime(mRvalueDataLastChangeTime), (int)atime , delta * 1e9);
 			}
 		}
 
@@ -393,11 +393,20 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 		if (mRvalueData != (newValue & mRecordMaskData))
 		{
+			// Excessive amounts of debug
 //			fprintf(mPatternFP, ";Data changed @time:%f atime %d old %08x new %08x udef %08x\n", realtime(time), (int)time, mRvalueData, (newValue & mRecordMaskData), (int)undefined);
 
 			mRvalueData = (newValue & mRecordMaskData);
 			mRvalueDataLastChangeTime = time;
 			mLastTimePosEdgeReportTime = 0;	// Reset the time on any change
+		}
+
+		if (mAllLastInputBits != newValue)
+		{
+			// Excessive amounts of debug
+//			fprintf(mPatternFP, ";All data changed @time:%f atime %d delta %d old %08x new %08x udef %08x\n", realtime(time), (int)time, (int)(time - mAllLastInputBitsTime), mAllLastInputBits, newValue, undefined);
+			mAllLastInputBits = newValue;
+			mAllLastInputBitsTime = time;
 		}
 
 		if (mLastTimeNegEdge > 0 && mLastTimePosEdge > 0 && mMWCheckAddressDataHeldTimeAfterPosEdge > 0.0f)

@@ -78,4 +78,7 @@ private:
 	double mMWCheckAddressHeldTimeBeforeNegEdge = 0.0f;
 	double mMWCheckAddressDataHeldTimeBeforePosEdge = 0.0f;
 	double mMWCheckAddressDataHeldTimeAfterPosEdge = 0.0f;
+
+	unsigned int mAllLastInputBits = 0;
+	ABSTIME mAllLastInputBitsTime = 0;
 };
