@@ -336,3 +336,4 @@ TestJig/t.bmp
 *.dll
 
 TestJig/Project Backups/
+TestJig/TestWriteGuardsResult.txt
