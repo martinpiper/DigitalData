@@ -130,3 +130,9 @@
 
 
 * Test the write held times using specific input timing data
+
+
+
+
+* This will cause the process to exit after a particular simulation time (in seconds) is reached.
+	EXITPROCCESSAFTER=5.0

@@ -22,39 +22,42 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	mRvalueAddressLastChangeTime = 0;
 	mRvalueDataLastChangeTime = 0;
 
+	CHAR *theID = instance->id();
+	parseExtraConfig(theID);
+
 	mActiveModel = (ActiveModel*) (instance->getactivemodel());
 
 	mInstance = instance;
 	mDigitalComponent = dsimckt;
 
-	CHAR *t = mInstance->getstrval((CHAR*)"PATTERN");
+	CHAR *t = getstrval((CHAR*)"PATTERN");
 	mFilename = t;
 
-	t = mInstance->getstrval((CHAR*)"TOLOW");
+	t = getstrval((CHAR*)"TOLOW");
 	mToLow = atof(t);
-	t = mInstance->getstrval((CHAR*)"THENTOHI");
+	t = getstrval((CHAR*)"THENTOHI");
 	mThenToHigh = atof(t);
-	t = mInstance->getstrval((CHAR*)"THENGUARD");
+	t = getstrval((CHAR*)"THENGUARD");
 	mThenGuard = atof(t);
 
-	t = mInstance->getstrval((CHAR*)"FORCEHIBEFORE");
+	t = getstrval((CHAR*)"FORCEHIBEFORE");
 	mForceHiBefore = atof(t);
-	t = mInstance->getstrval((CHAR*)"FORCEHIAFTER");
+	t = getstrval((CHAR*)"FORCEHIAFTER");
 	mForceHiAfter = atof(t);
-	t = mInstance->getstrval((CHAR*)"FORCELOBEFORE");
+	t = getstrval((CHAR*)"FORCELOBEFORE");
 	mForceLoBefore = atof(t);
-	t = mInstance->getstrval((CHAR*)"FORCELOAFTER");
+	t = getstrval((CHAR*)"FORCELOAFTER");
 	mForceLoAfter = atof(t);
 
-	t = mInstance->getstrval((CHAR*)"RECORD");
+	t = getstrval((CHAR*)"RECORD");
 	mRecord = atoi(t) ? true : false;
 
-	t = mInstance->getstrval((CHAR*)"OUTPUTTIME");
+	t = getstrval((CHAR*)"OUTPUTTIME");
 	mOutputTime = atoi(t) ? true : false;
-	t = mInstance->getstrval((CHAR*)"OUTPUTTIMEDELTA");
+	t = getstrval((CHAR*)"OUTPUTTIMEDELTA");
 	mOutputTimeDelta = atoi(t) ? true : false;
 
-	t = mInstance->getstrval((CHAR*)"OUTPUTUSINGWAITS");
+	t = getstrval((CHAR*)"OUTPUTUSINGWAITS");
 	mOutputUsingWaitsValue = 0;
 	mOutputUsingWaitsValueLast = 0;
 	if (t != 0)
@@ -69,14 +72,14 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		}
 	}
 
-	t = mInstance->getstrval((CHAR*)"OUTPUTIGNOREZEROWRITES");
+	t = getstrval((CHAR*)"OUTPUTIGNOREZEROWRITES");
 	mOutputIgnoreZeroWrites = false;
 	if (t != 0)
 	{
 		mOutputIgnoreZeroWrites = atoi(t) ? true : false;
 	}
 
-	t = mInstance->getstrval((CHAR*)"TRIGGERLEADSTOWRITE");
+	t = getstrval((CHAR*)"TRIGGERLEADSTOWRITE");
 	mTriggerLeadsToWrite = false;
 	if (t != 0)
 	{
@@ -84,29 +87,33 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	}
 
 	mMWCheckAddressHeldOnLow = false;
-	t = mInstance->getstrval((CHAR*)"MWCHECKADDRESSHELDONLOW");
+	t = getstrval((CHAR*)"MWCHECKADDRESSHELDONLOW");
 	if (t != 0)
 	{
 		mMWCheckAddressHeldOnLow = atoi(t) ? true : false;
 	}
 
 	mMWCheckDataHeldOnLow = false;
-	t = mInstance->getstrval((CHAR*)"MWCHECKDATAHELDONLOW");
+	t = getstrval((CHAR*)"MWCHECKDATAHELDONLOW");
 	if (t != 0)
 	{
 		mMWCheckDataHeldOnLow = atoi(t) ? true : false;
 	}
 
-	t = mInstance->getstrval((CHAR*)"MWADDRESSHELDTIMEBEFORENEGEDGE");
+	t = getstrval((CHAR*)"MWADDRESSHELDTIMEBEFORENEGEDGE");
 	mMWCheckAddressHeldTimeBeforeNegEdge = atof(t);
 
-	t = mInstance->getstrval((CHAR*)"MWADDRESSDATAHELDTIMEBEFOREPOSEDGE");
+	t = getstrval((CHAR*)"MWADDRESSDATAHELDTIMEBEFOREPOSEDGE");
 	mMWCheckAddressDataHeldTimeBeforePosEdge = atof(t);
 	
-	t = mInstance->getstrval((CHAR*)"MWADDRESSDATAHELDTIMEAFTERPOSEDGE");
+	t = getstrval((CHAR*)"MWADDRESSDATAHELDTIMEAFTERPOSEDGE");
 	mMWCheckAddressDataHeldTimeAfterPosEdge = atof(t);
 
-
+	t = getstrval((CHAR*)"EXITPROCCESSAFTER");
+	if (t != 0)
+	{
+		mExitProccessAfter = dsimtime(atof(t));
+	}
 
 	// Setup pins
 
@@ -190,6 +197,15 @@ BOOL DsimModel::indicate (REALTIME time, ACTIVEDATA *data)
 
 VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 {
+	if (mExitProccessAfter > 0 && (time >= mExitProccessAfter))
+	{
+		if (mRecord)
+		{
+			fflush(mPatternFP);
+			fclose(mPatternFP);
+			exit(0);
+		}
+	}
 	int i;
 	unsigned int value = 0;
 	unsigned int valuePosEdge = 0;
@@ -681,4 +697,80 @@ void DsimModel::QueueOrCheck(BufferedTransitions &potentialTransition)
 
 VOID DsimModel::callback (ABSTIME time, EVENTID eventid)
 {
+}
+
+static void TrimString(std::string &tidy)
+{
+	while (!tidy.empty() && isspace(tidy.front()))
+	{
+		tidy.erase(tidy.begin());
+	}
+	while (!tidy.empty() && isspace(tidy.back()))
+	{
+		tidy.erase(tidy.end() - 1);
+	}
+}
+
+void DsimModel::parseExtraConfig(CHAR *id)
+{
+	std::string filename = std::string("ModelConfig_") + std::string(id) + std::string(".txt");
+	FILE *fp = fopen(filename.c_str(), "r");
+
+	if (!fp)
+	{
+		return;
+	}
+
+	while (!feof(fp))
+	{
+		char buffer[1024];
+		char *got = fgets(buffer , sizeof(buffer)-1, fp);
+		if (!got)
+		{
+			break;
+		}
+
+		std::string tidy(got);
+		TrimString(tidy);
+
+		if (tidy.empty())
+		{
+			continue;
+		}
+
+		size_t pos = tidy.find_first_of('=');
+
+		if (pos == std::string::npos)
+		{
+			continue;
+		}
+
+		std::string key = tidy.substr(0,pos);
+		std::string value = tidy.substr(pos+1);
+
+		TrimString(key);
+		TrimString(value);
+
+		if (key.empty())
+		{
+			continue;
+		}
+
+		mConfig.insert(std::pair<std::string , std::string>(key , value));
+	}
+
+	fclose(fp);
+}
+
+CHAR *DsimModel::getstrval(CHAR *name, CHAR *defval)
+{
+	std::unordered_map<std::string , std::string>::iterator found = mConfig.find(name);
+	if (found != mConfig.end())
+	{
+		const std::string &value = found->second;
+		return (CHAR *) value.c_str();
+	}
+
+	CHAR *ret = mInstance->getstrval(name, defval);
+	return ret;
 }

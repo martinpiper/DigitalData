@@ -1,0 +1,8 @@
+; Comment line
+
+; Blank line above
+FOO=barBazBoing
+PATTERN=TestWriteGuardsResultOverride.txt
+
+; This will cause the process to force exit after a particular simulation time (in seconds) is reached.
+; EXITPROCCESSAFTER=5.0

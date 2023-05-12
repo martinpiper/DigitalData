@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include <stdio.h>
 #include <list>
+#include <unordered_map>
 #include "vsm.hpp"
 #include "ActiveModel.h"
 
@@ -31,6 +32,10 @@ public:
 	void QueueOrCheck(BufferedTransitions &potentialTransition);
 	VOID callback (ABSTIME time, EVENTID eventid);
 private:
+
+	void parseExtraConfig(CHAR *id);
+	CHAR *getstrval(CHAR *name, CHAR *defval = NULL);
+
 	IINSTANCE *mInstance;
 	IDSIMCKT *mDigitalComponent;
 	IDSIMPIN *mPinD[32];
@@ -81,4 +86,10 @@ private:
 
 	unsigned int mAllLastInputBits = 0;
 	ABSTIME mAllLastInputBitsTime = 0;
+
+	ABSTIME mExitProccessAfter = 0;
+
+
+	std::unordered_map<std::string , std::string> mConfig;
 };
+
