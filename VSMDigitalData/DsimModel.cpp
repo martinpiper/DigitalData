@@ -203,15 +203,6 @@ BOOL DsimModel::indicate (REALTIME time, ACTIVEDATA *data)
 
 VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 {
-	if (mExitProccessAfter > 0 && (time >= mExitProccessAfter))
-	{
-		if (mRecord)
-		{
-			fflush(mPatternFP);
-			fclose(mPatternFP);
-		}
-		exit(0);
-	}
 	int i;
 	unsigned int value = 0;
 	unsigned int valuePosEdge = 0;
@@ -693,6 +684,16 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	else
 	{
 		QueueOrCheck(potentialTransition);
+	}
+
+	if (mExitProccessAfter > 0 && (time >= mExitProccessAfter))
+	{
+		if (mRecord)
+		{
+			fflush(mPatternFP);
+			fclose(mPatternFP);
+		}
+		exit(0);
 	}
 }
 
