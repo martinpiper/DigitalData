@@ -22,13 +22,13 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	mRvalueAddressLastChangeTime = 0;
 	mRvalueDataLastChangeTime = 0;
 
-	CHAR *theID = instance->id();
-	parseExtraConfig(theID);
-
 	mActiveModel = (ActiveModel*) (instance->getactivemodel());
 
 	mInstance = instance;
 	mDigitalComponent = dsimckt;
+
+	CHAR *theID = mInstance->id();
+	parseExtraConfig(theID);
 
 	CHAR *t = getstrval((CHAR*)"PATTERN");
 	mFilename = t;
@@ -203,8 +203,8 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		{
 			fflush(mPatternFP);
 			fclose(mPatternFP);
-			exit(0);
 		}
+		exit(0);
 	}
 	int i;
 	unsigned int value = 0;
@@ -721,6 +721,9 @@ void DsimModel::parseExtraConfig(CHAR *id)
 		return;
 	}
 
+	mInstance->log((CHAR *) filename.c_str());
+
+
 	while (!feof(fp))
 	{
 		char buffer[1024];
@@ -768,6 +771,11 @@ CHAR *DsimModel::getstrval(CHAR *name, CHAR *defval)
 	if (found != mConfig.end())
 	{
 		const std::string &value = found->second;
+
+		char message[1024];
+		sprintf(message , "Replacing '%s' with '%s'" , found->first.c_str() , value.c_str());
+		mInstance->log(message);
+
 		return (CHAR *) value.c_str();
 	}
 
