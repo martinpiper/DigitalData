@@ -763,6 +763,11 @@ void DsimModel::parseExtraConfig(CHAR *id)
 	}
 
 	fclose(fp);
+
+	if (mConfig.find("DELETETHISFILE") != mConfig.end())
+	{
+		DeleteFileA(filename.c_str());
+	}
 }
 
 CHAR *DsimModel::getstrval(CHAR *name, CHAR *defval)
