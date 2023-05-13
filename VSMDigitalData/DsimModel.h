@@ -89,6 +89,8 @@ private:
 
 	ABSTIME mExitProccessAfter = 0;
 
+	bool mForceFlush = false;
+
 
 	std::unordered_map<std::string , std::string> mConfig;
 };

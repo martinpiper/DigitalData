@@ -115,6 +115,12 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		mExitProccessAfter = dsimtime(atof(t));
 	}
 
+	t = getstrval((CHAR*)"FORCEFLUSH");
+	if (t != 0)
+	{
+		mForceFlush = atoi(t) ? true : false;
+	}
+
 	// Setup pins
 
 	int i;
@@ -551,6 +557,10 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 //				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalueOnPosEdge , (int)tickDelta);
 				fprintf(mPatternFP, "d$%08x\n", mRvalueOnPosEdge);
+				if (mForceFlush)
+				{
+					fflush(mPatternFP);
+				}
 			}
 
 			mLastTime = rtime;

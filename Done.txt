@@ -136,4 +136,5 @@
 
 * This will cause the process to exit after a particular simulation time (in seconds) is reached.
 	EXITPROCCESSAFTER=5.0
-	DELETETHISFILE will delete the model config file after it has been read
+	DELETETHISFILE=1 will delete the model config file after it has been read
+	FORCEFLUSH=1 will enable for flushing of output data
