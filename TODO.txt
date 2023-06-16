@@ -56,6 +56,7 @@
 		> Toolbar button to enable the trigger again, capturing more data (don't clear old data)
 	* When receiving an update and the button "last" is pressed, then force the window scroll to the right hand end
 	* Receive updates from VSMDigitalData network connection
+	* Inspect the memory of the getdsimpin() result, see if there is a signal name in there.
 
 
 
