@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string>
 #include "ActiveModel.h"
+#include "..\..\C64\Common\ParamToNum.h"
 
 INT DsimModel::isdigital (CHAR *pinname)
 {
@@ -62,14 +63,14 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 	mOutputUsingWaitsValueLast = 0;
 	if (t != 0)
 	{
-		if (t[0] == '$')
-		{
-			mOutputUsingWaitsValue = std::strtoul(t+1, nullptr, 16);
-		}
-		else
-		{
-			mOutputUsingWaitsValue = std::strtoul(t, nullptr, 10);
-		}
+		mOutputUsingWaitsValue = ParamToUNum(t);
+	}
+
+	mRecordSenseChangeMask = 0;
+	t = getstrval((CHAR*)"RECORDSENSECHANGEMASK");
+	if (t != 0)
+	{
+		mRecordSenseChangeMask = ParamToUNum(t);
 	}
 
 	t = getstrval((CHAR*)"OUTPUTIGNOREZEROWRITES");
@@ -228,6 +229,21 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		}
 	}
 
+	unsigned int recordSenseChange = 0;
+	if (mRecord)
+	{
+		for (i = 31; i >= 0; i--)
+		{
+			if (mRecordSenseChangeMask & (1<<i))
+			{
+				if (mPinD[i]->isedge())
+				{
+					recordSenseChange |= 1<<i;
+				}
+			}
+		}
+	}
+
 	BufferedTransitions potentialTransition;
 	potentialTransition.mInput = value;
 	potentialTransition.mInputPositiveEdge = valuePosEdge;
@@ -312,8 +328,8 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 	bool clockIsLow = islow(mPinCLOCK->istate());
 	bool gotErrorThisTime = false;
 
-	// Get the value on the positive edge
-	if (mRecord && isClockEdgePos)
+	// Get the value on the positive edge or any sense change
+	if (mRecord && (isClockEdgePos || recordSenseChange))
 	{
 		int i;
 		mRvalueOnPosEdge = 0;
@@ -494,7 +510,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		mLastHiClockTime = time;
 	}
 
-	if (wasWaitFromQueue || isClockEdgePos)
+	if (wasWaitFromQueue || isClockEdgePos || recordSenseChange)
 	{
 		if (mRecord)
 		{
@@ -521,6 +537,10 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			{
 				REALTIME delta = rtime - mLastTime;
 				fprintf(mPatternFP, ";delta:%f\n", delta);
+			}
+			if (recordSenseChange && !(wasWaitFromQueue || isClockEdgePos))
+			{
+				fprintf(mPatternFP, ";recordSenseChange:$%08x\n", recordSenseChange);
 			}
 			if (mOutputUsingWaitsValue)
 			{

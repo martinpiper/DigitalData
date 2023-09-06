@@ -1,3 +1,7 @@
+* For the recording model investigate IDSIMPIN2::drivetristate()
+
+
+
 * There is a double write after a wait?!
 	If the wait has not had a zero output before then the data after the wait is output again
 

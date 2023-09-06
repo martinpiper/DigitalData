@@ -57,6 +57,8 @@ private:
 	unsigned long mOutputUsingWaitsValue;
 	unsigned long mOutputUsingWaitsValueLast;
 
+	unsigned long mRecordSenseChangeMask;
+
 	Data mData;
 	bool mTryGetData;
 	REALTIME mNotEarlierThan;

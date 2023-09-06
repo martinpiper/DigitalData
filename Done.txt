@@ -138,3 +138,10 @@
 	EXITPROCCESSAFTER=5.0
 	DELETETHISFILE=1 will delete the model config file after it has been read
 	FORCEFLUSH=1 will enable for flushing of output data
+
+
+
+
+* Digital Data model could do with a "record on signal change" from either hi to low or low to high or any change, bit mask.
+	Added RECORDSENSECHANGEMASK
+	Output files contains something like: ;recordSenseChange:$08000000
