@@ -320,7 +320,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			continue;
 		}
 
-		// +8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23
+		// +8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,+
 		if (mCurrentLine.at(0) == '+')
 		{
 			mCurrentLine = mCurrentLine.substr(1);
