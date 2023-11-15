@@ -263,11 +263,21 @@ int main()
 	value = data.getData();
 	assert(value == 0x87654321);
 
-	// Simulate off the end of the file, to check the correct handling of the file handle stack
 	data.simulate(0, 0x0, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x00);
 
+	// Evaluation of expression
+	data.simulate(0, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x377);
+
+	// Last d0
+	data.simulate(0, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x0);
+
+	// Simulate off the end of the file, to check the correct handling of the file handle stack
 	data.simulate(0, 0x0, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x100);

@@ -25,8 +25,14 @@ std::string trim(const std::string& str)
 	return trim_left(trim_right(str));
 }
 
-std::string getNextTok(std::string& str , const std::string pattern = ", \f\n\r\t\v")
+std::string getNextTok(std::string& str , std::string pattern = ", \f\n\r\t\v")
 {
+	// If '=' is used then do not tokenise on whitespace
+	if (str.at(0) == '=')
+	{
+		pattern.erase(std::remove(pattern.begin() , pattern.end(), ' '));
+		pattern.erase(std::remove(pattern.begin(), pattern.end(), '\t'));
+	}
 	size_t pos = str.find_first_of(pattern);
 	std::string ret = str.substr(0, pos);
 	if (std::string::npos != pos)

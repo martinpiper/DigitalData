@@ -47,6 +47,9 @@
 
 
 * Could do with having variables and evaluating simple expressions for output data
+
+	Done: e.g. Evaluate: d=$000300 | $70 | 1 | 2 | 4
+
 	e.g.
 	.BIT0 = 1
 	.BIT1 = 2
@@ -54,6 +57,11 @@
 	
 	d=BIT0 | BIT1 | BIT2
 	Would output the equivalent of $07
+	> Probably the best place would be to update getNextTok() in Data.cpp to return a longer string using substituted values if the first character is '='
+		To ParamToUNum
+		Then create a new ParamToUNum that evaluates simple expressions
+
+
 
 
 * When recording, it would be useful to be able to read the definition of labels, like ".BIT0 = 1" from the component "Other properties" and use these to resolve bits in the recorded output, then only output the raw bits not resolved after all other bits are resolved. For example d=$17 | BIT0
