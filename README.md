@@ -11,7 +11,7 @@ When trying to debug this, always use the Proteus Start simulation button or use
 
 ## Syntax
 
-* Number...	is any number, decimal or hex prefixed with $
+* Number...	is any number, decimal or hex prefixed with "$" or "0x". Numbers can also be simple bitwise expressions if prefixed with "=". e.g. =$02 | $01 | 256
 * ;	is a comment
 * dNumber	Sets the next value to output to be flagged with the _MEMWRITE output, waits for the next input clock
 * sNumber	Sets the output but does not wait for the input clock
@@ -23,4 +23,4 @@ When trying to debug this, always use the Proteus Start simulation button or use
 * wNumberMask,NumberValue	Waits for the input data NumberValue using the mask wNumberMask
 * @time:Number	Waits fo rthe simulation time Number to be reached
 * !Filename	Includes the new Filename from this point, parsing the lines until the end of the included file, then the parsing continues from the next line
-	
+* .label = value	Assigns a string replacement label with a value

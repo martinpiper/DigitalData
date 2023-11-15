@@ -267,7 +267,11 @@ int main()
 	value = data.getData();
 	assert(value == 0x00);
 
-	// Evaluation of expression
+	// Evaluation of expressions
+	data.simulate(0, 0x0, 0x00, 0x00);
+	value = data.getData();
+	assert(value == 0x377);
+
 	data.simulate(0, 0x0, 0x00, 0x00);
 	value = data.getData();
 	assert(value == 0x377);

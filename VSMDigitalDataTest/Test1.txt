@@ -1,3 +1,6 @@
+.label1=$000300
+.label2=$70
+
 ; Comment
 d0	; Another comment
 d00000001 d$123 d$456	d$321
@@ -34,9 +37,12 @@ d$87654321
 
 d0
 
-
 d=$000300 | $70 | 1 | 2 | 4
+; Should be the same as above, just less readable
+d=label1  label2  1  2  4
 
-
+; Below is a deliberate white space but empty line, do not remove the white spaces
+		
+; Keep the line above^^^
 
 d0

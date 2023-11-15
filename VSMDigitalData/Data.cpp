@@ -2,16 +2,33 @@
 #include "Data.h"
 #include <sstream>
 #include "../../C64/Common/ParamToNum.h"
+#include <map>
+#include <string>
+#include <algorithm>
+
+
+static std::map<std::string, std::string> labelValue;
+
 
 // https://gist.github.com/dedeexe/9080526
 std::string trim_left(const std::string& str)
 {
+	if (str.empty())
+	{
+		return "";
+	}
+
 	const std::string pattern = " \f\n\r\t\v";
 	return str.substr(str.find_first_not_of(pattern));
 }
 
 std::string trim_right(const std::string& str)
 {
+	if (str.empty())
+	{
+		return "";
+	}
+
 	const std::string pattern = " \f\n\r\t\v";
 	return str.substr(0, str.find_last_not_of(pattern) + 1);
 }
@@ -23,6 +40,17 @@ std::string trim(const std::string& str)
 		return "";
 	}
 	return trim_left(trim_right(str));
+}
+
+static std::string ReplaceAll(std::string str, const std::string& from, const std::string& to)
+{
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+	{
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+	return str;
 }
 
 std::string getNextTok(std::string& str , std::string pattern = ", \f\n\r\t\v")
@@ -45,6 +73,30 @@ std::string getNextTok(std::string& str , std::string pattern = ", \f\n\r\t\v")
 	{
 		str.clear();
 	}
+
+	// Look for any label replacements
+	bool replaced = false;
+	do
+	{
+		replaced = false;
+		// Reverse iterate to get the longer strings first
+		auto st = labelValue.rbegin();
+		while (st != labelValue.rend())
+		{
+			const std::string &toCompare = st->first;
+
+			std::string newRet = ReplaceAll(ret , toCompare, st->second);
+
+			if (newRet.compare(ret) != 0)
+			{
+				ret = newRet;
+				replaced = true;
+			}
+
+			st++;
+		}
+	} while (replaced);
+
 	return ret;
 }
 
@@ -422,6 +474,20 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			mCurrentFilename = mCurrentLine;
 			mCurrentLineNumber = 0;
 			CheckFileIsOpen(mFile);
+
+			mCurrentLine.clear();
+			continue;
+		}
+
+		// .label1 = $000300
+		if (mCurrentLine.at(0) == '.')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+
+			std::string label = getNextTok(mCurrentLine , " \t=");
+			std::string value = getNextTok(mCurrentLine, " \t=");
+
+			labelValue[label] = value;
 
 			mCurrentLine.clear();
 			continue;

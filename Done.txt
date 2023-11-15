@@ -190,3 +190,21 @@
 	* When receiving an update and the button "last" is pressed, then force the window scroll to the right hand end
 	* Receive updates from VSMDigitalData network connection
 	* Inspect the memory of the getdsimpin() result, see if there is a signal name in there.
+
+
+
+
+* Could do with having variables and evaluating simple expressions for output data
+
+	Done: e.g. Evaluate: d=$000300 | $70 | 1 | 2 | 4
+
+	e.g.
+	.BIT0 = 1
+	.BIT1 = 2
+	.BIT2 = 4
+	
+	d=BIT0 | BIT1 | BIT2
+	Would output the equivalent of $07
+	> Probably the best place would be to update getNextTok() in Data.cpp to return a longer string using substituted values if the first character is '='
+		To ParamToUNum
+		Then create a new ParamToUNum that evaluates simple expressions
