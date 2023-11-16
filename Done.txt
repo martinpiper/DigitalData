@@ -208,3 +208,7 @@
 	> Probably the best place would be to update getNextTok() in Data.cpp to return a longer string using substituted values if the first character is '='
 		To ParamToUNum
 		Then create a new ParamToUNum that evaluates simple expressions
+
+
+
+* Add proper comment ";" handling for comments after a command

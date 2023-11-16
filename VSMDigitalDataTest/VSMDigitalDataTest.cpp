@@ -287,4 +287,8 @@ int main()
 	assert(value == 0x100);
 
 	data.clear();
+
+	printf("Success\n");
+
+	return 0;
 }

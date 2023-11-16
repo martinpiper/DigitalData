@@ -1,5 +1,6 @@
-.label1=$000300
-.label2=$70
+.label12=$70
+.label1=$000300 | 4	; Testing label names that are a sub-string of a longer label name, and values that are a combination of values
+.allBits=$ffffffff
 
 ; Comment
 d0	; Another comment
@@ -25,7 +26,7 @@ d4
 b0
 d$321
 ; Using <mask> wait for <data>
-w$ffffffff,$1234
+wallBits,$1234			; A comment
 b1
 d0
 
@@ -39,7 +40,7 @@ d0
 
 d=$000300 | $70 | 1 | 2 | 4
 ; Should be the same as above, just less readable
-d=label1  label2  1  2  4
+d=label1  label12  1  2
 
 ; Below is a deliberate white space but empty line, do not remove the white spaces
 		

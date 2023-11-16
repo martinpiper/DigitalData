@@ -87,6 +87,7 @@ std::string getNextTok(std::string& str , std::string pattern = ", \f\n\r\t\v")
 
 			std::string newRet = ReplaceAll(ret , toCompare, st->second);
 
+			// If the substitution resulted in a change then use it and flag the change to cause further checks
 			if (newRet.compare(ret) != 0)
 			{
 				ret = newRet;
@@ -287,6 +288,11 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 		{
 			std::getline(*mFile, mCurrentLine);
 			mCurrentLineNumber++;
+			size_t pos = mCurrentLine.find(';');
+			if (std::string::npos != pos)
+			{
+				mCurrentLine.erase(pos);
+			}
 			mCurrentLine = trim(mCurrentLine);
 		}
 		if (mFile->eof())
@@ -306,12 +312,6 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 				continue;
 			}
 			break;
-		}
-
-		if (mCurrentLine.at(0) == ';')
-		{
-			mCurrentLine.clear();
-			continue;
 		}
 
 		// d$00000000
@@ -485,7 +485,7 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			mCurrentLine = mCurrentLine.substr(1);
 
 			std::string label = getNextTok(mCurrentLine , " \t=");
-			std::string value = getNextTok(mCurrentLine, " \t=");
+			std::string value = trim(mCurrentLine);
 
 			labelValue[label] = value;
 
