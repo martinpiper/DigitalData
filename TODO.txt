@@ -45,3 +45,7 @@
 * Perhaps enable a debug output file that logs the current simulation time, with a delta?, and outputs the total lines parsed during the read. Including comments and the source file etc.
 	This would make it a lot easier to sync data from the file with data recorded elsewhere.
 
+
+
+
+* Include longer commands, probably prefixed with ":" to be readable alternatives to the single character commands.
