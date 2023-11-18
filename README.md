@@ -21,6 +21,6 @@ When trying to debug this, always use the Proteus Start simulation button or use
 * ^+Number	Waits for the input data Number positive edge
 * ^-Number	Waits for the input data Number negative edge
 * wNumberMask,NumberValue	Waits for the input data NumberValue using the mask wNumberMask
-* @time:Number	Waits fo rthe simulation time Number to be reached
+* @time:Number	Waits for the simulation time Number to be reached
 * !Filename	Includes the new Filename from this point, parsing the lines until the end of the included file, then the parsing continues from the next line
 * .label = value	Assigns a string replacement label with a value
