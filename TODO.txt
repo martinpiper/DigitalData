@@ -36,6 +36,8 @@
 	Also have a global (for the simulation) unique ID, so that individual runs can be identified.
 	Probably also have a name, to separate the run data.
 	Try sending nano second tagged events, there was support for this value in ELK IIRC
+	* The DLL is process loaded once, and then used by multiple threads. This means it is possible to create a "session identifier" and share it across multiple recording instances
+
 	
 	
 	
@@ -43,9 +45,3 @@
 * Perhaps enable a debug output file that logs the current simulation time, with a delta?, and outputs the total lines parsed during the read. Including comments and the source file etc.
 	This would make it a lot easier to sync data from the file with data recorded elsewhere.
 
-
-
-
-* When recording, it would be useful to be able to read the definition of labels, like ".BIT0 = 1" from the component "Other properties" and use these to resolve bits in the recorded output, then only output the raw bits not resolved after all other bits are resolved. For example d=$17 | BIT0
-	The recorded file could do with outputting the labels at the start.
-	>> "d$%08x"

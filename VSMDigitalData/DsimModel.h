@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <list>
 #include <unordered_map>
+#include <map>
 #include "vsm.hpp"
 #include "ActiveModel.h"
 
@@ -95,5 +96,7 @@ private:
 
 
 	std::unordered_map<std::string , std::string> mConfig;
+
+	std::multimap<int, std::pair<std::string, unsigned long>> bitCountOfPairLabelValue;
 };
 

@@ -3,7 +3,20 @@
 #include <stdio.h>
 #include <string>
 #include "ActiveModel.h"
+#include "assert.h"
 #include "..\..\C64\Common\ParamToNum.h"
+
+static void TrimString(std::string& tidy)
+{
+	while (!tidy.empty() && isspace(tidy.front()))
+	{
+		tidy.erase(tidy.begin());
+	}
+	while (!tidy.empty() && isspace(tidy.back()))
+	{
+		tidy.erase(tidy.end() - 1);
+	}
+}
 
 INT DsimModel::isdigital (CHAR *pinname)
 {
@@ -150,7 +163,6 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 
 	if (mDoStart)
 	{
-		mDoStart = false;
 		if (mRecord)
 		{
 			mPatternFP = fopen(mFilename.c_str(), "w");
@@ -161,6 +173,48 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		}
 		mTryGetData = true;
 	}
+
+	// Read capture groups if any
+	if (mRecord)
+	{
+		for (i = 0; i < 32; i++)
+		{
+			char name[32];
+			sprintf(name, "LABELVALUE%d", i);
+			t = getstrval((CHAR*)name);
+			if (t != 0)
+			{
+				std::string working(t);
+				size_t pos = working.find('=');
+				if (std::string::npos != pos)
+				{
+					if (mDoStart && mPatternFP != 0)
+					{
+						fprintf(mPatternFP, ".%s\n", working.c_str());
+					}
+					std::string label = working.substr(0, pos);
+					std::string value = working.substr(pos + 1);
+					TrimString(label);
+					TrimString(value);
+					unsigned long theValue = ParamToUNum(value.c_str());
+					int numBits = 0;
+					unsigned long calcBits = theValue;
+					while (calcBits != 0)
+					{
+						if (calcBits & 1)
+						{
+							numBits++;
+						}
+						// Not sign MSB extended
+						calcBits >>= 1;
+					}
+					bitCountOfPairLabelValue.insert(std::pair<int, std::pair<std::string, unsigned long> >(calcBits, std::pair<std::string, unsigned long>(label, theValue)));
+				}
+			}
+		}
+	}
+
+	mDoStart = false;
 }
 
 VOID DsimModel::runctrl (RUNMODES mode)
@@ -526,6 +580,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			// Too short from the last negative edge to positive edge, then ignore the write
 			if (mOutputIgnoreZeroWrites && (tickDelta <= dsimtime(0.0000001L)))
 			{
+				// Currently disabled because changes on state change were arriving rapidly, since signals take time to settle on transition.
 //				willIgnoreWrite = true;
 			}
 
@@ -567,7 +622,54 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			else
 			{
 //				fprintf(mPatternFP, "d$%08x;  %d\n", mRvalueOnPosEdge , (int)tickDelta);
-				fprintf(mPatternFP, "d$%08x\n", mRvalueOnPosEdge);
+				if (!bitCountOfPairLabelValue.empty())
+				{
+					std::string replacements;
+					// We reverse iterate the list because we want to group those labels with the most bits to the left
+					unsigned int remainingValue = mRvalueOnPosEdge;
+					auto it = bitCountOfPairLabelValue.crbegin();
+					while (it != bitCountOfPairLabelValue.crend())
+					{
+						auto value = it->second;
+
+						const std::string& name = value.first;
+						unsigned long theValue = value.second;
+
+						if ((remainingValue & theValue) == theValue)
+						{
+							// Found a precise bit pattern match, so remove it from the remaining value and output the replacement
+							remainingValue &= ~theValue;
+
+							if (!replacements.empty())
+							{
+								replacements += " | ";
+							}
+
+							replacements += name;
+						}
+
+						it++;
+					}
+
+					if (!replacements.empty() && remainingValue != 0)
+					{
+						fprintf(mPatternFP, "d=%s | $%08x\n", replacements.c_str() , remainingValue);
+					}
+					else if (!replacements.empty() && remainingValue == 0)
+					{
+						fprintf(mPatternFP, "d=%s\n", replacements.c_str());
+					}
+					else
+					{
+						assert(remainingValue == mRvalueOnPosEdge);
+						// Fall back to the old method if there are no matches
+						fprintf(mPatternFP, "d$%08x\n", mRvalueOnPosEdge);
+					}
+				}
+				else
+				{
+					fprintf(mPatternFP, "d$%08x\n", mRvalueOnPosEdge);
+				}
 				if (mForceFlush)
 				{
 					fflush(mPatternFP);
@@ -728,18 +830,6 @@ void DsimModel::QueueOrCheck(BufferedTransitions &potentialTransition)
 
 VOID DsimModel::callback (ABSTIME time, EVENTID eventid)
 {
-}
-
-static void TrimString(std::string &tidy)
-{
-	while (!tidy.empty() && isspace(tidy.front()))
-	{
-		tidy.erase(tidy.begin());
-	}
-	while (!tidy.empty() && isspace(tidy.back()))
-	{
-		tidy.erase(tidy.end() - 1);
-	}
 }
 
 void DsimModel::parseExtraConfig(CHAR *id)

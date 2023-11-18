@@ -212,3 +212,11 @@
 
 
 * Add proper comment ";" handling for comments after a command
+
+
+
+* When recording, it would be useful to be able to read the definition of labels, like ".BIT0 = 1" from the component "Other properties" and use these to resolve bits in the recorded output, then only output the raw bits not resolved after all other bits are resolved. For example d=$17 | BIT0
+	The recorded file could do with outputting the labels at the start.
+	>> "d$%08x"
+	>> bitCountOfPairLabelValue
+	>> LABELVALUE0=someLabelName=$123
