@@ -36,11 +36,75 @@
 	Also have a global (for the simulation) unique ID, so that individual runs can be identified.
 	Probably also have a name, to separate the run data.
 	Try sending nano second tagged events, there was support for this value in ELK IIRC
+		https://xeraa.net/blog/2019_date-nano-elasticsearch-kibana/
 	* The DLL is process loaded once, and then used by multiple threads. This means it is possible to create a "session identifier" and share it across multiple recording instances
+	
+	>> https://www.elastic.co/elastic-stack
+		"Or download and get started"
+		>> https://www.elastic.co/downloads
+			Elasticsearch -> download
+				https://www.elastic.co/downloads/elasticsearch
+		>> Note: "Password for the elastic user" and "Copy the following enrollment token"
+	>> https://www.elastic.co/kibana
+		https://www.elastic.co/downloads/kibana
+		
+	CMD
+		cd /d C:\Users\marti\Downloads\elasticsearch-8.11.1-windows-x86_64\elasticsearch-8.11.1\bin
+		elasticsearch.bat
+	CMD
+		cd /d C:\Users\marti\Downloads\kibana-8.11.1-windows-x86_64\kibana-8.11.1\bin
+		kibana.bat
+		Follow the prompts...:
+			Kibana has not been configured.
+			Go to http://localhost:5601/...
+	
+	http://localhost:5601/app/management/security/api_keys
+	http://localhost:5601/app/management/data/index_management/indices
+		http://localhost:5601/app/management/data/index_management/indices/index_details?indexName=test-index-2
+			Authorization: ApiKey your_api_key
+			
+	>> Working REST queries:
+		curl --insecure -i -v "https://localhost:9200/myexample3/_doc/?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d @"c:\temp\t.json"
+		curl --insecure -i -v "https://localhost:9200/myexample3/_doc/?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d "{ \"@timestamp\": \"2099-11-15T13:12:00\",\"time\":\"12:00\",\"value\":1 }"
+		curl --insecure -i -v "https://localhost:9200/myexample3/_doc/?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d "{ \"time\":\"12:10\",\"value\":3 }"
+	
+	>> About authentication, although probably best just to implement the auth key and SSL: https://discuss.elastic.co/t/disable-authentification-for-elasticsearch/304862/2
+		https://learn.microsoft.com/en-us/windows/win32/api/wininet/nf-wininet-internetopenurla
+			INTERNET_FLAG_IGNORE_CERT_CN_INVALID
+			INTERNET_FLAG_IGNORE_CERT_DATE_INVALID
 
-	
-	
-	
+	>> About nanoseconds:
+		https://www.elastic.co/guide/en/elasticsearch/reference/current/date_nanos.html
+		> http://localhost:5601/app/management/data/index_management/indices/index_details?indexName=myexample3&tab=mappings
+		>> curl --insecure -i -X PUT -v "https://localhost:9200/myexample13?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d "{ \"mappings\": { \"properties\": { \"@timestamp\": { \"type\": \"date_nanos\" } } } }"
+		> curl --insecure -i -v "https://localhost:9200/myexample13/_doc/?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d "{ \"@timestamp\": \"2099-11-15T13:12:00\",\"time\":\"12:00\",\"value\":1 }"
+		> curl --insecure -i -v "https://localhost:9200/myexample13/_doc/?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d "{ \"@timestamp\": \"2023-11-19T19:56:00.000000000\",\"value\":1 }"
+		>> This allows breakdowns by "source.keyword"
+		> curl --insecure -i -v "https://localhost:9200/myexample13/_doc/?pretty" -H "Authorization: ApiKey ..." -H "Content-Type: application/json" -d "{ \"@timestamp\": \"2023-11-18T19:56:00.000000670\",\"value\":2,\"source\":\"a\" }"
+
+	>> Grafana https://grafana.com/get/?pg=graf&plcmt=hero-btn-1&tab=self-managed
+		> https://grafana.com/grafana/download?pg=get&platform=windows&plcmt=selfmanaged-box1-cta1&edition=oss
+			"Download the zip file"
+
+	>> Create an index with nano seconds, add test data:
+		curl --insecure -i -X PUT -v "https://localhost:9200/myexample14?pretty" -H "Authorization: ApiKey %ELASTICAPIKEY%" -H "Content-Type: application/json" -d "{ \"mappings\": { \"properties\": { \"@timestamp\": { \"type\": \"date_nanos\" } } } }"
+		curl --insecure -i -v "https://localhost:9200/myexample14/_doc/?pretty" -H "Authorization: ApiKey %ELASTICAPIKEY%" -H "Content-Type: application/json" -d "{ \"@timestamp\": \"2023-11-18T19:56:00.000000670\",\"value\":2,\"source\":\"a\" }"
+		
+	>> Graph Kibana:	http://localhost:5601/app/dashboards#/view/c4a2c9c0-86a6-11ee-ad15-a1db8e505e94?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:'2023-11-18T19:27:00.717Z',to:'2023-11-18T20:06:55.822Z'))
+	>> Graph Grafana:	http://localhost:3000/d/b2eb3523-56f5-475b-97ba-ffcc5f611b53/new-dashboard?orgId=1&from=1700335763253&to=1700337905738
+
+
+	>> InfluxDB Open Source
+		https://www.influxdata.com/products/influxdb/
+		https://docs.influxdata.com/influxdb/v2/
+		C:\Users\marti\Downloads\influxdb2-2.7.4-windows
+		https://docs.influxdata.com/influxdb/cloud/tools/influx-cli/?t=Windows
+		C:\Users\marti\Downloads\influxdb2-client-2.7.3-windows-amd64
+		http://localhost:8086/orgs/00001e340c298a82/dashboards/0c281d7b72895000?lower=now%28%29+-+2d
+		
+		
+		
+
 	
 * Perhaps enable a debug output file that logs the current simulation time, with a delta?, and outputs the total lines parsed during the read. Including comments and the source file etc.
 	This would make it a lot easier to sync data from the file with data recorded elsewhere.
