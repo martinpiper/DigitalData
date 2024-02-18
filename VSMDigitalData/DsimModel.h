@@ -94,6 +94,7 @@ private:
 
 	bool mForceFlush = false;
 
+	bool mIgnoreQueue = false;
 
 	std::unordered_map<std::string , std::string> mConfig;
 

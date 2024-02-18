@@ -135,6 +135,13 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		mForceFlush = atoi(t) ? true : false;
 	}
 
+	t = getstrval((CHAR*)"IGNOREQUEUE");
+	if (t != 0)
+	{
+		mIgnoreQueue = atoi(t) ? true : false;
+	}
+
+
 	// Setup pins
 
 	int i;
@@ -715,14 +722,17 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 					// And queue the current event
 					QueueOrCheck(potentialTransition);
 
-					// Queued events, so retire them first
-					BufferedTransitions &firstOne = mQueuedEvents.front();
-					data.simulate(realtime(time), firstOne.mInput, firstOne.mInputPositiveEdge, firstOne.mInputNegativeEdge);
-					mQueuedEvents.pop_front();
+					if (!mQueuedEvents.empty())
+					{
+						// Queued events, so retire them first
+						BufferedTransitions& firstOne = mQueuedEvents.front();
+						data.simulate(realtime(time), firstOne.mInput, firstOne.mInputPositiveEdge, firstOne.mInputNegativeEdge);
+						mQueuedEvents.pop_front();
+					}
 
 					if (mActiveModel)
 					{
-						sprintf(mActiveModel->mDisplayFileAndLine, "Running queued: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+						sprintf(mActiveModel->mDisplayFileAndLine, "Running queued (%d): %d %s", mQueuedEvents.size(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
 					}
 				}
 
@@ -797,6 +807,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 					else
 					{
 						sprintf(mActiveModel->mDisplayFileAndLine, "Stopped: %d %s", data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+						mIgnoreQueue = true;	// Stop queue to save memory since there won't be any more events, at all...
 					}
 				}
 			}
@@ -823,7 +834,10 @@ void DsimModel::QueueOrCheck(BufferedTransitions &potentialTransition)
 {
 	if (!mRecord && !(mLastAdded == potentialTransition))
 	{
-		mQueuedEvents.push_back(potentialTransition);
+		if (!mIgnoreQueue)
+		{
+			mQueuedEvents.push_back(potentialTransition);
+		}
 		mLastAdded = potentialTransition;
 	}
 }
