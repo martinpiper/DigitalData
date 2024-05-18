@@ -24,3 +24,5 @@ When trying to debug this, always use the Proteus Start simulation button or use
 * @time:Number	Waits for the simulation time Number to be reached
 * !Filename	Includes the new Filename from this point, parsing the lines until the end of the included file, then the parsing continues from the next line
 * .label = value	Assigns a string replacement label with a value
+* :emit text message	Writes a commented text message to all active recording instances. Very useful when trying to synchronise test input dat with output recorded data.
+

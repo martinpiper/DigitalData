@@ -173,6 +173,7 @@ VOID DsimModel::setup (IINSTANCE *instance, IDSIMCKT *dsimckt)
 		if (mRecord)
 		{
 			mPatternFP = fopen(mFilename.c_str(), "w");
+			mData.addRecordingFile(mPatternFP);
 		}
 		else
 		{
@@ -243,6 +244,8 @@ VOID DsimModel::runctrl (RUNMODES mode)
 	case RM_STOP:
 		if (0 != mPatternFP)
 		{
+			mData.removeRecordingFile(mPatternFP);
+
 			fclose(mPatternFP);
 		}
 		mPatternFP = 0;

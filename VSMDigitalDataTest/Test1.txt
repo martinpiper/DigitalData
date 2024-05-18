@@ -7,6 +7,9 @@ d0	; Another comment
 d00000001 d$123 d$456	d$321
 d01,d$123,	,d$456,	,d$321
 
+:emit Debug 0
+
+
 +8,9,10,11,+
 ++
 
@@ -22,6 +25,8 @@ d3
 ^-$01
 d4
 
+:emit Debug 0a
+
 
 b0
 d$321
@@ -29,6 +34,8 @@ d$321
 wallBits,$1234			; A comment
 b1
 d0
+
+:emit Debug 0b
 
 
 @time:0.735000

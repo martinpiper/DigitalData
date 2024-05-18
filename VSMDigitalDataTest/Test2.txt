@@ -1,13 +1,33 @@
 d$ffffffff
 
+:emit Debug 1
+
 <0,1,2,3,4,5,6,7,<C:\Work\DigitalData\VSMDigitalDataTest\t.bin
+
+:emit Debug 2
+
 <0,1,2,3,4,5,6,7,@$2,>1,<C:\Work\DigitalData\VSMDigitalDataTest\t.bin
+
+:emit Debug 3
+
 <0,1,2,3,4,5,6,7,@$2,>$10,<C:\Work\DigitalData\VSMDigitalDataTest\t.bin
+
+:emit Debug 4
+
 <0,1,2,3,4,5,6,7,@$3,<C:\Work\DigitalData\VSMDigitalDataTest\t.bin
+
+:emit Debug 5
+
 <0,1,2,3,4,5,6,7,>10,<C:\Work\DigitalData\VSMDigitalDataTest\t.bin
 
 d$ff00ff00
 
+:emit Debug 6
+
 !C:\Work\DigitalData\VSMDigitalDataTest\Test3.txt
 
+:emit Debug 7
+
 <0,1,2,3,4,5,6,7,<C:\Work\DigitalData\VSMDigitalDataTest\t.bin
+
+:emit Debug 8

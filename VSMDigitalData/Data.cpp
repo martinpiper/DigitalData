@@ -3,11 +3,13 @@
 #include <sstream>
 #include "../../C64/Common/ParamToNum.h"
 #include <map>
+#include <set>
 #include <string>
 #include <algorithm>
 
 
 static std::map<std::string, std::string> labelValue;
+static std::set<FILE*> recordingFiles;
 
 
 // https://gist.github.com/dedeexe/9080526
@@ -493,7 +495,53 @@ void Data::simulate(const double time, const unsigned int dInput, const unsigned
 			continue;
 		}
 
+		if (mCurrentLine.at(0) == ':')
+		{
+			mCurrentLine = mCurrentLine.substr(1);
+			if (mCurrentLine.rfind("emit", 0) == 0)
+			{
+				mCurrentLine = mCurrentLine.substr(4);
+				mCurrentLine = trim(mCurrentLine);
+
+				if (!mCurrentLine.empty())
+				{
+					auto st = recordingFiles.rbegin();
+					while (st != recordingFiles.rend())
+					{
+						FILE *fp = *st;
+
+						fprintf(fp, "\n; %s\n", mCurrentLine.c_str());
+
+						st++;
+					}
+				}
+
+				mCurrentLine.clear();
+				continue;
+			}
+		}
+
 		printf("Unknown comand: %s\n", mCurrentLine.c_str());
 		break;
 	}
+}
+
+void Data::addRecordingFile(FILE* fp)
+{
+	if (0 == fp)
+	{
+		return;
+	}
+
+	recordingFiles.insert(fp);
+}
+
+void Data::removeRecordingFile(FILE* fp)
+{
+	if (0 == fp)
+	{
+		return;
+	}
+
+	recordingFiles.erase(fp);
 }

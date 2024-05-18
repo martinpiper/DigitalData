@@ -226,3 +226,8 @@
 
 * Added: IGNOREQUEUE=1 to the digital data model, also updated the DigitalData TestJig
 	Also mIgnoreQueue, which defaults to false
+
+
+
+
+* A debug event command with text comment, :emit some text here, that inserts a comment in all recording instances of DigitalData

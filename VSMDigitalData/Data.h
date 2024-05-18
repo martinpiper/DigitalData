@@ -59,6 +59,9 @@ public:
 		return mFile;
 	}
 
+	void addRecordingFile(FILE* fp);
+	void removeRecordingFile(FILE* fp);
+
 private:
 	void CheckFileIsOpen(std::ifstream * toCheck);
 
