@@ -113,3 +113,9 @@
 
 
 * Include longer commands, probably prefixed with ":" to be readable alternatives to the single character commands.
+
+
+
+
+* Validate mode can compare with previous recording.
+	Signal to indicate difference for debug break
