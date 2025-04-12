@@ -4,6 +4,10 @@
 #include "Data.h"
 #include <string>
 
+#if VSM_API_VERSION < 200
+#define KEYCODE WORD
+#endif
+
 class ActiveModel : public IACTIVEMODEL
 {
 public:
@@ -12,7 +16,7 @@ public:
     IDSIMMODEL *getdsimmodel (CHAR *primitive);
     VOID plot (ACTIVESTATE state);
     VOID animate (INT element, ACTIVEDATA *newstate);
-    BOOL actuate (WORD key, INT x, INT y, DWORD flags);
+	BOOL actuate(KEYCODE key, INT x, INT y, DWORD flags);
 
 	void drawElements(void);
 	void drawText(void);

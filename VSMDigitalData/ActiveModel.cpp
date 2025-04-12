@@ -71,7 +71,7 @@ void ActiveModel::drawScreen(void)
 	mComponent->drawtext(mDisplayFileAndLinePos.x, mDisplayFileAndLinePos.y, 0, TXJ_LEFT | TXJ_MIDDLE, mDisplayFileAndLine);
 }
 
-BOOL ActiveModel::actuate (WORD key, INT x, INT y, DWORD flags)
+BOOL ActiveModel::actuate (KEYCODE key, INT x, INT y, DWORD flags)
 {
 	return FALSE;
 }

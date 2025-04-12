@@ -735,7 +735,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 					if (mActiveModel)
 					{
-						sprintf(mActiveModel->mDisplayFileAndLine, "Running queued (%d): %d %s", mQueuedEvents.size(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
+						sprintf(mActiveModel->mDisplayFileAndLine, "Running queued (%d): %d %s", (int) mQueuedEvents.size(), data.getCurrentLineNumber(), data.getCurrentFilename().c_str());
 					}
 				}
 

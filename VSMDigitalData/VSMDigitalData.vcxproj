@@ -111,7 +111,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;VSMDIGITALDISPLAY_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\ReplicaNet\ReplicaNetPublic\Includes;..\..\PrivateWork\VSMSDK</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ReplicaNet\ReplicaNetPublic\Includes;..\..\PrivateWork\VSMSDK\V2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,7 +159,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;VSMDIGITALDISPLAY_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\ReplicaNet\ReplicaNetPublic\Includes;..\..\PrivateWork\VSMSDK</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\ReplicaNet\ReplicaNetPublic\Includes;..\..\PrivateWork\VSMSDK\V2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
