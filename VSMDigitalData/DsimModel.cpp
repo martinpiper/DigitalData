@@ -829,6 +829,10 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			fflush(mPatternFP);
 			fclose(mPatternFP);
 		}
+		PostQuitMessage(0);
+		PostMessageA(GetActiveWindow(), WM_CLOSE, 0, 0);
+		PostMessageA(GetActiveWindow(), WM_QUIT, 0, 0);
+		ExitProcess(0);
 		exit(0);
 	}
 }
