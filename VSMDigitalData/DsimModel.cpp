@@ -5,6 +5,38 @@
 #include "ActiveModel.h"
 #include "assert.h"
 #include "..\..\C64\Common\ParamToNum.h"
+#include "RNPlatform/Inc/ThreadClass.h"
+#include "RNPlatform/Inc/Thread.h"
+
+// This is needed because exiting the process with WM_QUIT seems to result in weird suspended process behaviour with new Proteus
+class ReliableProcessQuit : public RNReplicaNet::Thread, public RNReplicaNet::ThreadClass
+{
+public:
+	ReliableProcessQuit()
+	{
+
+	}
+	virtual ~ReliableProcessQuit()
+	{
+
+	}
+
+	int ThreadEntry(void)
+	{
+		// Wait a short period before doing these...
+		Sleep(1000);
+		char buffer[1024];
+		sprintf(buffer, "c:\\SysTools\\pskill.exe -t %d" , GetCurrentProcessId());
+		OutputDebugStringA(buffer);
+		STARTUPINFOA sinfo;
+		PROCESS_INFORMATION pinfo;
+		CreateProcessA(0, buffer, 0, 0, TRUE, NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW, 0, 0, &sinfo, &pinfo);
+		ExitProcess(0);
+		exit(0);
+	}
+};
+
+static ReliableProcessQuit* quitThread = 0;
 
 static void TrimString(std::string& tidy)
 {
@@ -561,6 +593,13 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 	if (gotErrorThisTime)
 	{
+		if (mRecord)
+		{
+			// Output something to the log file to make it obvious there is a problem
+			fprintf(mPatternFP, "MWFail @time:%f\n", realtime(time));
+			mInstance->warning((CHAR*)"MWFail active, check the recording for details");
+		}
+
 		// And then indicate a reset for the failure signal
 		if (mPinMWFail != 0)
 		{
@@ -822,7 +861,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		QueueOrCheck(potentialTransition);
 	}
 
-	if (mExitProccessAfter > 0 && (time >= mExitProccessAfter))
+	if (mExitProccessAfter > 0 && ((time >= mExitProccessAfter) || gotErrorThisTime))
 	{
 		if (mRecord)
 		{
@@ -832,8 +871,11 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		PostQuitMessage(0);
 		PostMessageA(GetActiveWindow(), WM_CLOSE, 0, 0);
 		PostMessageA(GetActiveWindow(), WM_QUIT, 0, 0);
-		ExitProcess(0);
-		exit(0);
+		if (!quitThread)
+		{
+			quitThread = new ReliableProcessQuit();
+			quitThread->Begin(quitThread);
+		}
 	}
 }
 

@@ -231,3 +231,15 @@
 
 
 * A debug event command with text comment, :emit some text here, that inserts a comment in all recording instances of DigitalData
+
+
+
+* EXITPROCCESSAFTER now uses c:\SysTools\pskill.exe with the current PDS.exe process ID to make the quit/exit reliable in Proteus 9.0+
+
+
+
+* If there is an error and recording then write MWFail to the log, withouta comment, this should make errors easy to spot
+
+
+
+* If there is EXITPROCCESSAFTER and an error then exit instead of potentially hitting a breakpoint
