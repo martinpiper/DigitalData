@@ -26,7 +26,7 @@ public:
 		// Wait a short period before doing these...
 		Sleep(1000);
 		char buffer[1024];
-		sprintf(buffer, "c:\\SysTools\\pskill.exe -t %d" , GetCurrentProcessId());
+		sprintf(buffer, "c:\\SysTools\\pskill.exe %d" , GetCurrentProcessId());
 		OutputDebugStringA(buffer);
 		STARTUPINFOA sinfo;
 		PROCESS_INFORMATION pinfo;
@@ -438,7 +438,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 			}
 		}
 
-		if (mMWCheckAddressDataHeldTimeBeforePosEdge > 0.0f)
+		if (mMWCheckAddressDataHeldTimeBeforePosEdge > 0.0f && realtime(time) >= mMWCheckAddressDataHeldTimeBeforePosEdge)
 		{
 			// Coincident events are allowed
 			ABSTIME atime = time - mRvalueAddressLastChangeTime;
@@ -478,7 +478,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		mLastTimeNegEdge = time;
 		mLastTimePosEdgeReportTime = 0;	// Reset the report time
 
-		if (mMWCheckAddressHeldTimeBeforeNegEdge > 0.0f)
+		if (mMWCheckAddressHeldTimeBeforeNegEdge > 0.0f && realtime(time) >= mMWCheckAddressHeldTimeBeforeNegEdge)
 		{
 			double delta = realtime(time - mRvalueAddressLastChangeTime);
 			if (delta < mMWCheckAddressHeldTimeBeforeNegEdge)
@@ -536,7 +536,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 		if (mLastTimeNegEdge > 0 && mLastTimePosEdge > 0 && mMWCheckAddressDataHeldTimeAfterPosEdge > 0.0f)
 		{
-			if (mLastTimePosEdgeReportTime == 0)
+			if (mLastTimePosEdgeReportTime == 0 && realtime(time) >= mMWCheckAddressDataHeldTimeAfterPosEdge)
 			{
 				mLastTimePosEdgeReportTime = time;
 				double delta = realtime(mRvalueAddressLastChangeTime - mLastTimePosEdge);
@@ -571,7 +571,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 
 		// For now assume the address is D[8..31]
 		// and assume data is D[0..7]
-		if (mMWCheckAddressHeldOnLow)
+		if (mMWCheckAddressHeldOnLow && realtime(time) >= mMWCheckAddressHeldOnLow)
 		{
 			if ( (newHeldValue & mRecordMaskAddress) != (mRvalueWhenLow & mRecordMaskAddress))
 			{
@@ -579,7 +579,7 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 				fprintf(mPatternFP, ";Address not held @time:%f:$%08x on neg $%08x @ntime:%f\n", realtime(time), newHeldValue , mRvalueOnNegEdge , realtime(mLastTimeNegEdge));
 			}
 		}
-		if (mMWCheckDataHeldOnLow)
+		if (mMWCheckDataHeldOnLow && realtime(time) >= mMWCheckDataHeldOnLow)
 		{
 			if ((newHeldValue & mRecordMaskData) != (mRvalueWhenLow & mRecordMaskData))
 			{
@@ -861,7 +861,16 @@ VOID DsimModel::simulate(ABSTIME time, DSIMMODES mode)
 		QueueOrCheck(potentialTransition);
 	}
 
-	if (mExitProccessAfter > 0 && ((time >= mExitProccessAfter) || gotErrorThisTime))
+	if (mExitProccessAfter > 0 && gotErrorThisTime)
+	{
+		// Make sure any fails are instantly flushed...
+		if (mRecord)
+		{
+			fflush(mPatternFP);
+		}
+	}
+
+	if (mExitProccessAfter > 0 && (time >= mExitProccessAfter))
 	{
 		if (mRecord)
 		{
